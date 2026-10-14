@@ -1,6 +1,6 @@
 # Heapspark Life — Step 1 Proposal
 
-> Status: **awaiting approval**. Nothing gets built until this is signed off.
+> Status: **approved**. Progress: ✅ (a) island + camera · ⏳ (b) building kit next.
 
 ## 1. Architecture at a glance
 

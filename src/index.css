@@ -1,0 +1,48 @@
+@import 'tailwindcss';
+
+/* Dark mode follows a `.dark` class on <html> (set from the theme setting). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: ui-rounded, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --color-spark-50: #ecfeff;
+  --color-spark-400: #22d3ee;
+  --color-spark-500: #0ea5b7;
+  --color-spark-600: #0b8a99;
+  --color-sun: #fde047;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overscroll-behavior: none;
+}
+
+body {
+  background: #8fd8f5;
+  color: #0f172a;
+  -webkit-tap-highlight-color: transparent;
+}
+.dark body {
+  background: #0b1733;
+  color: #f1f5f9;
+}
+
+/* Hide horizontal scrollbars on chip rows while keeping them scrollable. */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
