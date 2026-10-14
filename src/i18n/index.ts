@@ -29,3 +29,6 @@ export function useT() {
   const locale = useUiStore((s) => s.locale);
   return (key: TranslationKey, vars?: Record<string, string | number>) => translate(locale, key, vars);
 }
+
+/** BCP-47 locale for Intl date/number formatting (Kreol falls back to French formats). */
+export const intlLocale = (l: Locale) => (l === 'en' ? 'en-GB' : 'fr-MU');

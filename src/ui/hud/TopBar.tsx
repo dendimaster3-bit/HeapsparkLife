@@ -7,6 +7,8 @@ import { DISTRICTS_BY_ID } from '@/data/districts';
 import { TOWNS_BY_ID } from '@/data/towns';
 import { formatHour } from '@/lib/time';
 import { SettingsMenu } from './SettingsMenu';
+import { HighlightChip } from './HighlightChip';
+import { useSearchStore } from '@/store/useSearchStore';
 
 const base = 'flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-semibold shadow-md backdrop-blur';
 const chip = `${base} bg-white/90 text-slate-800 dark:bg-slate-900/85 dark:text-slate-100`;
@@ -17,6 +19,7 @@ export function TopBar() {
   const hour = useClockStore((s) => s.hour);
   const daylight = useClockStore((s) => s.daylight);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const openSearch = useSearchStore((s) => s.setOpen);
 
   const district = districtId ? DISTRICTS_BY_ID[districtId] : null;
   const town = townId ? TOWNS_BY_ID[townId] : null;
@@ -44,7 +47,10 @@ export function TopBar() {
         )}
       </nav>
 
-      <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+      <div className="pointer-events-auto flex shrink-0 flex-wrap items-center justify-end gap-2">
+        <button className={`${chip} w-11 justify-center px-0`} onClick={() => openSearch(true)} aria-label={t('search.open')}>
+          <span aria-hidden className="text-lg">🔍</span>
+        </button>
         <span className={chip} title={t('hud.timeLabel')} aria-label={`${t('hud.timeLabel')} ${formatHour(hour)}`}>
           <span aria-hidden>{daylight > 0.5 ? '☀️' : '🌙'}</span>
           <span className="tabular-nums">{formatHour(hour)}</span>
@@ -58,6 +64,8 @@ export function TopBar() {
           <span aria-hidden className="text-lg">⚙️</span>
         </button>
         {settingsOpen && <SettingsMenu onClose={() => setSettingsOpen(false)} />}
+        <div className="basis-full" />
+        <HighlightChip />
       </div>
     </header>
   );

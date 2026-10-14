@@ -15,6 +15,8 @@ export interface CameraTarget {
   distance: number;
   /** Polar angle from vertical in radians (0 = top-down). */
   polar: number;
+  /** Compass heading to view from (radians); omitted = keep the current one. */
+  azimuth?: number;
 }
 
 /** Island overview: whole island in frame, slightly tilted. */
@@ -43,7 +45,7 @@ interface CameraState {
   goDistrict(id: DistrictId): void;
   goTown(id: string): void;
   /** Focus a business building at a world position. */
-  goBusiness(id: string, townId: string, look: [number, number, number]): void;
+  goBusiness(id: string, townId: string, look: [number, number, number], facing?: number): void;
   /** One step back up the zoom hierarchy. */
   goBack(): void;
   /** Called by the rig when the camera settles after the player pans/zooms. */
@@ -86,14 +88,15 @@ export const useCameraStore = create<CameraState>((set, get) => ({
     }));
   },
 
-  goBusiness: (id, townId, look) => {
+  goBusiness: (id, townId, look, facing) => {
     const t = TOWNS_BY_ID[townId];
     set((s) => ({
       level: 'business',
       districtId: t?.districtId ?? s.districtId,
       townId,
       businessId: id,
-      target: { look, distance: BUSINESS_DISTANCE, polar: 0.9 },
+      // View the shop front at a friendly 3/4 angle.
+      target: { look, distance: BUSINESS_DISTANCE, polar: 0.9, azimuth: facing === undefined ? undefined : facing + 0.45 },
       requestId: s.requestId + 1,
     }));
   },

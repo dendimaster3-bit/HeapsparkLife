@@ -55,6 +55,12 @@ A building = **base shape** (kiosk, shop, two-storey, large venue) + **signature
 
 Plots are generated along the streets of every town (`src/game/world/plots.ts`, ids `<townId>-<n>`). Demo businesses live in `src/data/demoBusinesses.ts` and are all flagged `isDemo`.
 
+## Business cards, search and tracking
+
+- **Business card:** tap a building (or a search result). It shows the category, town and district, open status with the next opening time, Call / WhatsApp / Website buttons, active promos, and under "More details": description, photos and weekly hours. It's a bottom sheet on phones and a side panel on wider screens, and the camera turns to the shop front and frames it beside the card.
+- **Search** (🔍 in the top bar): free text (accent-insensitive, matches name, type, category, town, district, description) plus category → subcategory, district, *Open now* and *With promo* filters. Tap a result to fly there; **Show on map** pins every result and frames them.
+- **Tracking:** `view` (building shown at town zoom, once per session), `cardOpen`, `call`, `whatsapp`, `website` via `api.events.track`. The mock adapter stores them anonymously in localStorage (capped at 5,000) for the business stats screen in step (g).
+
 ## Controls
 
 - **Phone:** drag to move, pinch to zoom, two fingers to rotate/tilt.

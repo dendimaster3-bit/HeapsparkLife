@@ -4,6 +4,8 @@
  * (districts are loaded lazily, then kept).
  */
 import { useEffect } from 'react';
+import { api } from '@/api';
+import { useSearchStore } from '@/store/useSearchStore';
 import { useFrame } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import { useCameraStore } from '@/store/useCameraStore';
@@ -26,6 +28,7 @@ function BusinessBuilding({ business, plot }: { business: MapBusiness; plot: Plo
   const base = business.baseOverride ?? sub?.base;
   const open = useIsOpen(business.hours);
   const selected = useCameraStore((s) => s.businessId === business.id);
+  const pinned = useSearchStore((s) => s.highlight.includes(business.id));
   const goBusiness = useCameraStore((s) => s.goBusiness);
   const { spec } = useBuildingSpec({ styleId, base });
 
@@ -34,7 +37,7 @@ function BusinessBuilding({ business, plot }: { business: MapBusiness; plot: Plo
   const select = (e: ThreeEvent<MouseEvent>) => {
     if (!isTap(e)) return;
     e.stopPropagation();
-    goBusiness(business.id, business.townId, [x, y + 0.08, z]);
+    goBusiness(business.id, business.townId, [x, y + 0.08, z], plot.rotation);
   };
 
   return (
@@ -50,6 +53,7 @@ function BusinessBuilding({ business, plot }: { business: MapBusiness; plot: Plo
         level={business.growthLevel}
         gold={business.isFoundingMember}
         selected={selected}
+        pinned={pinned}
       />
       {/* Invisible hit box: cheap, reliable tap target covering building + prop. */}
       <mesh
@@ -65,14 +69,30 @@ function BusinessBuilding({ business, plot }: { business: MapBusiness; plot: Plo
   );
 }
 
+/** Businesses already counted as "viewed" this session. */
+const viewed = new Set<string>();
+
 export function BusinessLayer() {
   const districtId = useCameraStore((s) => s.districtId);
+  const level = useCameraStore((s) => s.level);
+  const townId = useCameraStore((s) => s.townId);
   const loadDistrict = useWorldStore((s) => s.loadDistrict);
   const districts = useWorldStore((s) => s.districts);
 
   useEffect(() => {
     if (districtId) void loadDistrict(districtId);
   }, [districtId, loadDistrict]);
+
+  // A "view" = the building was on screen at town zoom (once per session).
+  useEffect(() => {
+    if ((level !== 'town' && level !== 'business') || !townId || !districtId) return;
+    for (const b of districts[districtId]?.businesses ?? []) {
+      if (b.townId === townId && !viewed.has(b.id)) {
+        viewed.add(b.id);
+        api.events.track('view', b.id);
+      }
+    }
+  }, [level, townId, districtId, districts]);
 
   // Shop windows glow brighter after dark (one shared material).
   useFrame(() => {

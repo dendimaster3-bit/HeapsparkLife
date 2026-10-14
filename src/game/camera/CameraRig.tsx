@@ -75,7 +75,20 @@ export function CameraRig() {
     const aspect = width / height;
     // Pull back on narrow (portrait) screens so the whole area stays in frame.
     const fit = Math.min(1.6, Math.max(1, 1 / (aspect * 1.5)));
-    applyTarget(c, { ...target, distance: target.distance * fit }, true);
+    const distance = target.distance * fit;
+    applyTarget(c, { ...target, distance }, true);
+
+    // Keep a selected building visible beside/above the business card:
+    // shift the view so it sits in the part of the screen the card leaves free.
+    // (Signs verified in a browser: +x moves the target left, +y moves it up.)
+    if (useCameraStore.getState().level === 'business') {
+      const visibleH = 2 * distance * Math.tan(THREE.MathUtils.degToRad(45 / 2));
+      const visibleW = visibleH * aspect;
+      if (width >= 640) void c.setFocalOffset((210 / width) * visibleW, 0, 0, true); // side panel ~420px
+      else void c.setFocalOffset(0, 0.22 * visibleH, 0, true); // bottom sheet
+    } else {
+      void c.setFocalOffset(0, 0, 0, true);
+    }
   }, [requestId, introDone, getThree]);
 
   return <CameraControls ref={controls} makeDefault />;
@@ -83,7 +96,12 @@ export function CameraRig() {
 
 /** Move to a target keeping the current compass heading (azimuth). */
 function applyTarget(c: CameraControlsImpl, t: CameraTarget, animate: boolean) {
-  const az = c.azimuthAngle;
+  // Take the shortest way round to a requested heading.
+  let az = c.azimuthAngle;
+  if (t.azimuth !== undefined) {
+    const delta = Math.atan2(Math.sin(t.azimuth - az), Math.cos(t.azimuth - az));
+    az += delta;
+  }
   const [lx, ly, lz] = t.look;
   const sinP = Math.sin(t.polar);
   void c.setLookAt(

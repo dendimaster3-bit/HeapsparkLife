@@ -46,6 +46,8 @@ export interface Subcategory {
   categoryId: CategoryId;
   name: string;
   styleId: BuildingStyleId;
+  /** Emoji shown in lists and on the card (falls back to the category's). */
+  icon?: string;
   /** Optional base override, e.g. a supermarket uses the large venue. */
   base?: BaseShape;
 }
@@ -102,3 +104,42 @@ export interface Plot {
 export interface MapBusiness extends Business {
   activePromoCount: number;
 }
+
+/** A promo as shown on the business card (full promo model arrives in step d). */
+export interface PromoSummary {
+  id: string;
+  businessId: string;
+  title: string;
+  expiresAt: string;
+}
+
+/** Everything the business card needs. */
+export interface BusinessDetail {
+  business: MapBusiness;
+  plot: Plot;
+  promos: PromoSummary[];
+}
+
+/** Search + filter parameters. All optional; empty = everything. */
+export interface SearchParams {
+  query?: string;
+  categoryId?: CategoryId;
+  subcategoryId?: string;
+  districtId?: DistrictId;
+  openNow?: boolean;
+  hasPromo?: boolean;
+}
+
+/**
+ * Anonymous interaction events powering business + admin stats. No
+ * personal data: just what happened, to which business, and when.
+ */
+export type AnalyticsEventType = 'view' | 'cardOpen' | 'call' | 'whatsapp' | 'website' | 'adClick';
+
+export interface AnalyticsEvent {
+  type: AnalyticsEventType;
+  businessId: string;
+  at: string;
+}
+
+export type EventSummary = Record<AnalyticsEventType, number>;

@@ -19,38 +19,38 @@ export const CATEGORIES: Category[] = [
  */
 export const SUBCATEGORIES: Subcategory[] = [
   // Restaurants & Food
-  { id: 'restaurant', categoryId: 'restaurants-food', name: 'Restaurant', styleId: 'restaurant' },
-  { id: 'cafe', categoryId: 'restaurants-food', name: 'Café', styleId: 'restaurant', base: 'shop' },
-  { id: 'street-food', categoryId: 'restaurants-food', name: 'Street food & snack', styleId: 'street-food' },
-  { id: 'bakery', categoryId: 'restaurants-food', name: 'Bakery', styleId: 'bakery' },
+  { id: 'restaurant', icon: '🍛', categoryId: 'restaurants-food', name: 'Restaurant', styleId: 'restaurant' },
+  { id: 'cafe', icon: '☕', categoryId: 'restaurants-food', name: 'Café', styleId: 'restaurant', base: 'shop' },
+  { id: 'street-food', icon: '🥙', categoryId: 'restaurants-food', name: 'Street food & snack', styleId: 'street-food' },
+  { id: 'bakery', icon: '🥖', categoryId: 'restaurants-food', name: 'Bakery', styleId: 'bakery' },
   // Beauty & Wellness
-  { id: 'hair-salon', categoryId: 'beauty-wellness', name: 'Hair & beauty salon', styleId: 'salon' },
-  { id: 'barber', categoryId: 'beauty-wellness', name: 'Barber', styleId: 'salon', base: 'kiosk' },
-  { id: 'spa', categoryId: 'beauty-wellness', name: 'Spa & massage', styleId: 'salon', base: 'twoStorey' },
+  { id: 'hair-salon', icon: '💇', categoryId: 'beauty-wellness', name: 'Hair & beauty salon', styleId: 'salon' },
+  { id: 'barber', icon: '💈', categoryId: 'beauty-wellness', name: 'Barber', styleId: 'salon', base: 'kiosk' },
+  { id: 'spa', icon: '💆', categoryId: 'beauty-wellness', name: 'Spa & massage', styleId: 'salon', base: 'twoStorey' },
   // Automotive
-  { id: 'car-wash', categoryId: 'automotive', name: 'Car wash', styleId: 'car-wash' },
-  { id: 'garage', categoryId: 'automotive', name: 'Mechanic / garage', styleId: 'garage' },
-  { id: 'tyre-shop', categoryId: 'automotive', name: 'Tyres & batteries', styleId: 'garage', base: 'shop' },
+  { id: 'car-wash', icon: '🧽', categoryId: 'automotive', name: 'Car wash', styleId: 'car-wash' },
+  { id: 'garage', icon: '🔧', categoryId: 'automotive', name: 'Mechanic / garage', styleId: 'garage' },
+  { id: 'tyre-shop', icon: '🛞', categoryId: 'automotive', name: 'Tyres & batteries', styleId: 'garage', base: 'shop' },
   // Home Services
-  { id: 'plumber', categoryId: 'home-services', name: 'Plumber', styleId: 'home-services' },
-  { id: 'electrician', categoryId: 'home-services', name: 'Electrician', styleId: 'home-services' },
-  { id: 'cleaning', categoryId: 'home-services', name: 'Cleaning', styleId: 'home-services' },
+  { id: 'plumber', icon: '🚰', categoryId: 'home-services', name: 'Plumber', styleId: 'home-services' },
+  { id: 'electrician', icon: '💡', categoryId: 'home-services', name: 'Electrician', styleId: 'home-services' },
+  { id: 'cleaning', icon: '🧹', categoryId: 'home-services', name: 'Cleaning', styleId: 'home-services' },
   // Construction & Trades
-  { id: 'construction', categoryId: 'construction-trades', name: 'Building contractor', styleId: 'construction' },
-  { id: 'carpenter', categoryId: 'construction-trades', name: 'Carpenter & joinery', styleId: 'construction', base: 'shop' },
+  { id: 'construction', icon: '🏗️', categoryId: 'construction-trades', name: 'Building contractor', styleId: 'construction' },
+  { id: 'carpenter', icon: '🪚', categoryId: 'construction-trades', name: 'Carpenter & joinery', styleId: 'construction', base: 'shop' },
   // Health & Medical
-  { id: 'pharmacy', categoryId: 'health-medical', name: 'Pharmacy', styleId: 'pharmacy' },
-  { id: 'clinic', categoryId: 'health-medical', name: 'Clinic', styleId: 'pharmacy', base: 'twoStorey' },
-  { id: 'dentist', categoryId: 'health-medical', name: 'Dentist', styleId: 'pharmacy' },
+  { id: 'pharmacy', icon: '💊', categoryId: 'health-medical', name: 'Pharmacy', styleId: 'pharmacy' },
+  { id: 'clinic', icon: '🩺', categoryId: 'health-medical', name: 'Clinic', styleId: 'pharmacy', base: 'twoStorey' },
+  { id: 'dentist', icon: '🦷', categoryId: 'health-medical', name: 'Dentist', styleId: 'pharmacy' },
   // Professional Services
-  { id: 'accountant', categoryId: 'professional-services', name: 'Accountant', styleId: 'office' },
-  { id: 'lawyer', categoryId: 'professional-services', name: 'Lawyer & notary', styleId: 'office' },
-  { id: 'it-services', categoryId: 'professional-services', name: 'IT services', styleId: 'office' },
+  { id: 'accountant', icon: '📊', categoryId: 'professional-services', name: 'Accountant', styleId: 'office' },
+  { id: 'lawyer', icon: '⚖️', categoryId: 'professional-services', name: 'Lawyer & notary', styleId: 'office' },
+  { id: 'it-services', icon: '💻', categoryId: 'professional-services', name: 'IT services', styleId: 'office' },
   // Shopping & Retail
-  { id: 'retail', categoryId: 'shopping-retail', name: 'Retail shop', styleId: 'retail' },
-  { id: 'clothing', categoryId: 'shopping-retail', name: 'Clothing & fashion', styleId: 'retail' },
-  { id: 'supermarket', categoryId: 'shopping-retail', name: 'Supermarket', styleId: 'retail', base: 'largeVenue' },
-  { id: 'hardware', categoryId: 'shopping-retail', name: 'Hardware store', styleId: 'retail', base: 'largeVenue' },
+  { id: 'retail', icon: '🛍️', categoryId: 'shopping-retail', name: 'Retail shop', styleId: 'retail' },
+  { id: 'clothing', icon: '👗', categoryId: 'shopping-retail', name: 'Clothing & fashion', styleId: 'retail' },
+  { id: 'supermarket', icon: '🛒', categoryId: 'shopping-retail', name: 'Supermarket', styleId: 'retail', base: 'largeVenue' },
+  { id: 'hardware', icon: '🔨', categoryId: 'shopping-retail', name: 'Hardware store', styleId: 'retail', base: 'largeVenue' },
 ];
 
 export const CATEGORIES_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c])) as Record<CategoryId, Category>;

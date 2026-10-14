@@ -10,15 +10,16 @@
 import { Suspense, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Detailed } from '@react-three/drei';
-import type * as THREE from 'three';
+import * as THREE from 'three';
 import type { BaseShape, BuildingStyleId, GrowthLevel } from '@/types/business';
-import { BASES, Box, GEO, kitMaterials, lambert } from './kit';
+import { BASES, Box, kitMaterials, lambert } from './kit';
 import { BASE_COMPONENTS } from './bases';
 import { BUILDING_STYLES } from './registry';
 import { Signboard } from './Signboard';
 import { PromoBeam } from './decorators/PromoBeam';
 import { GrowthExtras } from './decorators/GrowthExtras';
 import { FoundingStar } from './decorators/FoundingStar';
+import { SearchPin } from './decorators/SearchPin';
 
 export interface BuildingVisual {
   name: string;
@@ -32,6 +33,8 @@ export interface BuildingVisual {
   level: GrowthLevel;
   gold: boolean;
   selected?: boolean;
+  /** Highlighted as a search result. */
+  pinned?: boolean;
 }
 
 /** Growth makes the whole building a little bigger. */
@@ -76,15 +79,16 @@ export function BuildingSimple(v: BuildingVisual) {
   );
 }
 
+const RING_GEO = new THREE.TorusGeometry(0.5, 0.03, 6, 40);
+
 /** Pulsing ring under the selected building. */
 function SelectionRing({ brand, radius }: { brand: string; radius: number }) {
   const ref = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
-    const k = radius * (1 + Math.sin(clock.elapsedTime * 4) * 0.05);
-    ref.current?.scale.set(k, k, 0.4); // flat ring: thin in its local z
+    ref.current?.scale.setScalar(radius * (1 + Math.sin(clock.elapsedTime * 4) * 0.05));
   });
   return (
-    <mesh ref={ref} geometry={GEO.torus} material={lambert(brand, brand, 0.6)} rotation-x={-Math.PI / 2} position-y={0.1} />
+    <mesh ref={ref} geometry={RING_GEO} material={lambert(brand, brand, 0.6)} rotation-x={-Math.PI / 2} position-y={0.15} />
   );
 }
 
@@ -104,7 +108,8 @@ export function Building({ lodDistances = [0, 9, 30], ...v }: BuildingVisual & {
         <group />
       </Detailed>
       {v.promo && <PromoBeam from={spec.top * scale + 0.3} />}
-      {v.selected && <SelectionRing brand={v.brand} radius={Math.max(spec.w, spec.d) * 1.6} />}
+      {v.pinned && !v.selected && <SearchPin y={spec.top * scale + 1} color={v.brand} />}
+      {v.selected && <SelectionRing brand={v.brand} radius={Math.max(spec.w, spec.d) * 2.4} />}
     </group>
   );
 }

@@ -7,7 +7,8 @@ import { TopBar } from './hud/TopBar';
 import { Navigator } from './hud/Navigator';
 import { DistrictToast } from './hud/DistrictToast';
 import { DebugPanel } from './hud/DebugPanel';
-import { BusinessPeek } from './hud/BusinessPeek';
+import { BusinessCard } from './card/BusinessCard';
+import { SearchSheet } from './search/SearchSheet';
 import { useCameraStore } from '@/store/useCameraStore';
 
 // The 3D engine is its own chunk so the intro paints instantly.
@@ -36,8 +37,9 @@ export default function GamePage() {
       {introDone && (
         <>
           <TopBar />
-          {level === 'business' ? <BusinessPeek /> : <Navigator />}
+          {level === 'business' ? <BusinessCard /> : <Navigator />}
           <DistrictToast />
+          <SearchSheet />
         </>
       )}
       {debug && <DebugPanel />}
