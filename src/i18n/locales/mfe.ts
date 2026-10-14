@@ -29,5 +29,12 @@ export const mfe: Partial<Record<TranslationKey, string>> = {
   'settings.language': 'Lang',
   'legal.pointsNotMoney': 'Spark Points se zis pou zwe — se pa kas e zot pa kapav sanz zot pou larzan.',
   'legal.demo': 'Bann biznes ki ou trouve isi se bann egzanp.',
+  'plot.claim': 'Pran sa plas-la',
+  'biz.open': 'Ouver aster',
+  'biz.closed': 'Ferme',
+  'biz.promos': '{n} promo aktif',
+  'biz.founding': 'Manm Fondater #{n}',
+  'biz.level': 'Nivo {n}',
+  'biz.demo': 'Biznes egzanp',
   'debug.realTime': 'Ler reel',
 };

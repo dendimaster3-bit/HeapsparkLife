@@ -11,6 +11,7 @@ import { hashString, heightAt, project, rng } from '@/lib/geo';
 import type { Town, TownKind } from '@/types/geo';
 import { nightFactor } from '@/store/useClockStore';
 import { isBuildable } from './placement';
+import { PLOT_RADIUS, getAllPlots } from './plots';
 
 const HOUSES: Record<TownKind, { count: number; radius: number }> = {
   city: { count: 90, radius: 1.5 },
@@ -30,6 +31,10 @@ interface House {
 
 function generateHouses(towns: Town[]): House[] {
   const out: House[] = [];
+  // Keep business plots clear of filler houses.
+  const plots = getAllPlots();
+  const nearPlot = (x: number, z: number) =>
+    plots.some((p) => Math.hypot(p.position[0] - x, p.position[1] - z) < PLOT_RADIUS + 0.08);
   for (const town of towns) {
     const { count, radius } = HOUSES[town.kind];
     const rand = rng(hashString(town.id));
@@ -40,7 +45,7 @@ function generateHouses(towns: Town[]): House[] {
       const a = rand() * Math.PI * 2;
       const r = Math.sqrt(rand()) * radius;
       const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
-      if (!isBuildable(x, z)) continue;
+      if (!isBuildable(x, z) || nearPlot(x, z)) continue;
       // Bigger, taller buildings towards the centre of cities.
       const core = town.kind === 'city' ? 1 - r / radius : 0;
       out.push({

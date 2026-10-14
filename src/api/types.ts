@@ -1,19 +1,28 @@
 /**
  * The one interface the whole app talks to. Adapters (mock, Supabase)
  * implement it; UI and game code never import an adapter directly.
- * Later steps add businesses, promos, players, ads, admin…
  */
-import type { District, Landmark, Town } from '@/types/geo';
+import type { District, DistrictId, Landmark, Town } from '@/types/geo';
+import type { Category, MapBusiness, Plot, Subcategory } from '@/types/business';
 
 export interface WorldData {
   districts: District[];
   towns: Town[];
   landmarks: Landmark[];
+  categories: Category[];
+  subcategories: Subcategory[];
 }
 
 export interface HeapsparkApi {
   geo: {
-    /** Everything needed to draw the map. Fetched once at startup. */
+    /** Everything needed to draw the base map. Fetched once at startup. */
     getWorld(): Promise<WorldData>;
+  };
+  map: {
+    /**
+     * Plots + member businesses of one district. The game calls this as
+     * the player enters a district, so districts load lazily.
+     */
+    getDistrict(districtId: DistrictId): Promise<{ plots: Plot[]; businesses: MapBusiness[] }>;
   };
 }

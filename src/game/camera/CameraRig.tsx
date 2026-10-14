@@ -34,7 +34,7 @@ export function CameraRig() {
   useEffect(() => {
     const c = controls.current;
     if (!c) return;
-    c.minDistance = 1.2;
+    c.minDistance = 0.5;
     c.maxDistance = 180;
     c.minPolarAngle = 0.1;
     c.maxPolarAngle = 1.2; // never look from below the horizon

@@ -24,14 +24,17 @@ export const ISLAND_VIEW: CameraTarget = {
   polar: 0.62,
 };
 const TOWN_DISTANCE = 4.5;
+const BUSINESS_DISTANCE = 1.7;
 
 /** Distances where manual zooming switches levels. */
-export const LEVEL_THRESHOLDS = { island: 45, district: 12 } as const;
+export const LEVEL_THRESHOLDS = { island: 45, district: 12, town: 3.5 } as const;
 
 interface CameraState {
   level: ZoomLevel;
   districtId: DistrictId | null;
   townId: string | null;
+  /** Selected business (level 'business'). */
+  businessId: string | null;
   target: CameraTarget;
   /** Bumped on every programmatic move so the rig knows to animate. */
   requestId: number;
@@ -39,6 +42,8 @@ interface CameraState {
   goIsland(): void;
   goDistrict(id: DistrictId): void;
   goTown(id: string): void;
+  /** Focus a business building at a world position. */
+  goBusiness(id: string, townId: string, look: [number, number, number]): void;
   /** One step back up the zoom hierarchy. */
   goBack(): void;
   /** Called by the rig when the camera settles after the player pans/zooms. */
@@ -49,11 +54,12 @@ export const useCameraStore = create<CameraState>((set, get) => ({
   level: 'island',
   districtId: null,
   townId: null,
+  businessId: null,
   target: ISLAND_VIEW,
   requestId: 0,
 
   goIsland: () =>
-    set((s) => ({ level: 'island', districtId: null, townId: null, target: ISLAND_VIEW, requestId: s.requestId + 1 })),
+    set((s) => ({ level: 'island', districtId: null, townId: null, businessId: null, target: ISLAND_VIEW, requestId: s.requestId + 1 })),
 
   goDistrict: (id) => {
     const d = DISTRICTS_BY_ID[id];
@@ -61,6 +67,7 @@ export const useCameraStore = create<CameraState>((set, get) => ({
       level: 'district',
       districtId: id,
       townId: null,
+      businessId: null,
       target: { look: groundPoint(d.center), distance: d.zoomDistance, polar: 0.75 },
       requestId: s.requestId + 1,
     }));
@@ -73,29 +80,44 @@ export const useCameraStore = create<CameraState>((set, get) => ({
       level: 'town',
       districtId: t.districtId,
       townId: id,
+      businessId: null,
       target: { look: groundPoint(t.at), distance: TOWN_DISTANCE, polar: 0.9 },
       requestId: s.requestId + 1,
     }));
   },
 
+  goBusiness: (id, townId, look) => {
+    const t = TOWNS_BY_ID[townId];
+    set((s) => ({
+      level: 'business',
+      districtId: t?.districtId ?? s.districtId,
+      townId,
+      businessId: id,
+      target: { look, distance: BUSINESS_DISTANCE, polar: 0.9 },
+      requestId: s.requestId + 1,
+    }));
+  },
+
   goBack: () => {
-    const { level, districtId } = get();
-    if ((level === 'town' || level === 'business') && districtId) get().goDistrict(districtId);
+    const { level, districtId, townId } = get();
+    if (level === 'business' && townId) get().goTown(townId);
+    else if (level === 'town' && districtId) get().goDistrict(districtId);
     else get().goIsland();
   },
 
   syncFromControls: (distance, under, nearTown) => {
-    const { level, districtId, townId } = get();
+    const { level, districtId, townId, businessId } = get();
     // Derive the level from how far the player has zoomed.
     let next: ZoomLevel = level;
     if (distance > LEVEL_THRESHOLDS.island) next = 'island';
     else if (distance > LEVEL_THRESHOLDS.district) next = 'district';
-    else if (level === 'island' || level === 'district') next = 'town';
+    else if (level !== 'business' || distance > LEVEL_THRESHOLDS.town) next = 'town';
 
     const nextDistrict = next === 'island' ? null : under ?? districtId;
     const nextTown = next === 'town' || next === 'business' ? nearTown ?? townId : null;
-    if (next !== level || nextDistrict !== districtId || nextTown !== townId) {
-      set({ level: next, districtId: nextDistrict, townId: nextTown });
+    const nextBusiness = next === 'business' ? businessId : null;
+    if (next !== level || nextDistrict !== districtId || nextTown !== townId || nextBusiness !== businessId) {
+      set({ level: next, districtId: nextDistrict, townId: nextTown, businessId: nextBusiness });
     }
   },
 }));

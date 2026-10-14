@@ -7,6 +7,8 @@ import { TopBar } from './hud/TopBar';
 import { Navigator } from './hud/Navigator';
 import { DistrictToast } from './hud/DistrictToast';
 import { DebugPanel } from './hud/DebugPanel';
+import { BusinessPeek } from './hud/BusinessPeek';
+import { useCameraStore } from '@/store/useCameraStore';
 
 // The 3D engine is its own chunk so the intro paints instantly.
 const GameCanvas = lazy(() => import('@/game/GameCanvas'));
@@ -18,6 +20,7 @@ export default function GamePage() {
   const introDone = useUiStore((s) => s.introDone);
   const debug = useUiStore((s) => s.debug);
   const [sceneReady, setSceneReady] = useState(false);
+  const level = useCameraStore((s) => s.level);
 
   useEffect(() => {
     void load();
@@ -33,7 +36,7 @@ export default function GamePage() {
       {introDone && (
         <>
           <TopBar />
-          <Navigator />
+          {level === 'business' ? <BusinessPeek /> : <Navigator />}
           <DistrictToast />
         </>
       )}

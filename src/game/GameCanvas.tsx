@@ -20,6 +20,8 @@ import { Traffic } from './ambient/Traffic';
 import { Boats } from './ambient/Boats';
 import { Plane } from './ambient/Plane';
 import { FpsProbe } from './FpsProbe';
+import { DebugHooks } from './DebugHooks';
+import { BusinessLayer } from './buildings/BusinessLayer';
 
 export default function GameCanvas({ world, onReady }: { world: WorldData; onReady?: () => void }) {
   const [dpr, setDpr] = useState(Math.min(1.5, window.devicePixelRatio));
@@ -50,8 +52,14 @@ export default function GameCanvas({ world, onReady }: { world: WorldData; onRea
       <Traffic />
       <Boats />
       <Plane />
+      <BusinessLayer />
       <MapLabels world={world} />
-      {debug && <FpsProbe />}
+      {debug && (
+        <>
+          <FpsProbe />
+          <DebugHooks />
+        </>
+      )}
     </Canvas>
   );
 }
