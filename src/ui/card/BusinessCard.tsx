@@ -5,9 +5,8 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { api } from '@/api';
-import { intlLocale, useT, type TranslationKey } from '@/i18n';
+import { useT, type TranslationKey } from '@/i18n';
 import { useCameraStore } from '@/store/useCameraStore';
-import { useUiStore } from '@/store/useUiStore';
 import { useClockStore } from '@/store/useClockStore';
 import { CATEGORIES_BY_ID, SUBCATEGORIES_BY_ID } from '@/data/categories';
 import { DISTRICTS_BY_ID } from '@/data/districts';
@@ -18,6 +17,7 @@ import type { BusinessDetail } from '@/types/business';
 import { useBusinessDetail } from './useBusinessDetail';
 import { HoursTable } from './HoursTable';
 import { PhotoStrip } from './PhotoStrip';
+import { PromoList } from './PromoList';
 
 const action =
   'flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl px-3 text-sm font-bold shadow-sm transition active:scale-95';
@@ -39,14 +39,12 @@ function StatusLine({ d }: { d: BusinessDetail }) {
   );
 }
 
-function CardBody({ d, expanded }: { d: BusinessDetail; expanded: boolean }) {
+function CardBody({ d, expanded, onChanged }: { d: BusinessDetail; expanded: boolean; onChanged: () => void }) {
   const t = useT();
-  const locale = useUiStore((s) => s.locale);
   const b = d.business;
   const sub = SUBCATEGORIES_BY_ID[b.subcategoryId];
   const cat = sub ? CATEGORIES_BY_ID[sub.categoryId] : undefined;
   const track = (type: 'call' | 'whatsapp' | 'website') => api.events.track(type, b.id);
-  const date = (iso: string) => new Intl.DateTimeFormat(intlLocale(locale), { dateStyle: 'medium', timeZone: 'Indian/Mauritius' }).format(new Date(iso));
 
   return (
     <>
@@ -92,25 +90,7 @@ function CardBody({ d, expanded }: { d: BusinessDetail; expanded: boolean }) {
         <h3 id="card-promos" className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {t('card.promos')}
         </h3>
-        {d.promos.length ? (
-          <ul className="space-y-2">
-            {d.promos.map((p) => (
-              <li key={p.id} className="flex items-center gap-3 rounded-2xl border-2 border-yellow-300 bg-yellow-50 p-3 dark:border-yellow-700 dark:bg-yellow-950">
-                <span className="text-2xl" aria-hidden>✨</span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-slate-900 dark:text-yellow-50">{p.title}</p>
-                  <p className="text-xs text-slate-600 dark:text-yellow-200">{t('card.validUntil', { date: date(p.expiresAt) })}</p>
-                </div>
-                <button disabled title={t('card.unlockSoon')} className="min-h-11 shrink-0 rounded-full bg-yellow-400 px-4 text-sm font-bold text-yellow-950 opacity-60">
-                  {t('card.unlock')}
-                </button>
-              </li>
-            ))}
-            <li className="text-xs text-slate-500 dark:text-slate-400">{t('card.unlockSoon')}</li>
-          </ul>
-        ) : (
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t('card.noPromos')}</p>
-        )}
+        <PromoList promos={d.promos} brand={b.brandColor} onChanged={onChanged} />
       </section>
 
       {expanded && (
@@ -141,7 +121,7 @@ export function BusinessCard() {
   const t = useT();
   const businessId = useCameraStore((s) => s.businessId);
   const goBack = useCameraStore((s) => s.goBack);
-  const detail = useBusinessDetail(businessId);
+  const [detail, refresh] = useBusinessDetail(businessId);
   const [expanded, setExpanded] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
 
@@ -197,7 +177,7 @@ export function BusinessCard() {
 
         {detail && (
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-4 pb-4 pt-3">
-            <CardBody d={detail} expanded={expanded} />
+            <CardBody d={detail} expanded={expanded} onChanged={refresh} />
             <button
               onClick={() => setExpanded((e) => !e)}
               aria-expanded={expanded}

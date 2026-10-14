@@ -3,6 +3,7 @@
  * `categories`, `subcategories`, `building_configs`, `businesses`, `plots`.
  */
 import type { DistrictId, Vec2 } from './geo';
+import type { Promo } from './promo';
 
 export type CategoryId =
   | 'restaurants-food'
@@ -105,19 +106,12 @@ export interface MapBusiness extends Business {
   activePromoCount: number;
 }
 
-/** A promo as shown on the business card (full promo model arrives in step d). */
-export interface PromoSummary {
-  id: string;
-  businessId: string;
-  title: string;
-  expiresAt: string;
-}
-
 /** Everything the business card needs. */
 export interface BusinessDetail {
   business: MapBusiness;
   plot: Plot;
-  promos: PromoSummary[];
+  /** Active promos (status active, started, not expired). */
+  promos: Promo[];
 }
 
 /** Search + filter parameters. All optional; empty = everything. */

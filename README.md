@@ -20,7 +20,7 @@ Handy URL flags:
 | `?debug` | FPS / draw-call / triangle meter and a time-of-day slider |
 | `?hour=19.5` | Force the Mauritius time (e.g. to see the night lights) |
 
-Pages: `/` the game · `/kit` building-kit showroom (toggle open/closed, promo, growth level, gold, night).
+Pages: `/` the game · `/validate` code validation for shop staff · `/privacy` · `/terms` · `/kit` building-kit showroom (toggle open/closed, promo, growth level, gold, night).
 
 Copy `.env.example` to `.env` to change the data adapter (`VITE_API`) or serve from a sub-path (`VITE_BASE=/life/`).
 
@@ -60,6 +60,14 @@ Plots are generated along the streets of every town (`src/game/world/plots.ts`, 
 - **Business card:** tap a building (or a search result). It shows the category, town and district, open status with the next opening time, Call / WhatsApp / Website buttons, active promos, and under "More details": description, photos and weekly hours. It's a bottom sheet on phones and a side panel on wider screens, and the camera turns to the shop front and frames it beside the card.
 - **Search** (🔍 in the top bar): free text (accent-insensitive, matches name, type, category, town, district, description) plus category → subcategory, district, *Open now* and *With promo* filters. Tap a result to fly there; **Show on map** pins every result and frames them.
 - **Tracking:** `view` (building shown at town zoom, once per session), `cardOpen`, `call`, `whatsapp`, `website` via `api.events.track`. The mock adapter stores them anonymously in localStorage (capped at 5,000) for the business stats screen in step (g).
+
+## Promos, wallet and validation
+
+- **Sign-in** is passwordless: email *or* mobile number + a 6-digit one-time code. New players add a display name and accept the privacy notice (Data Protection Act 2017). In mock mode no message is sent; the code is shown on screen. Players can sign out or **delete their data** from Settings.
+- **Unlocking** a promo (business card → ✨ Unlock) asks guests to sign in first, then issues a code like `HS-7KQ2-M9XA` (crypto-random, no look-alike characters). Each player gets **one code per promo**; unlocking again shows the same code. Quantity limits, expiry and optional "code valid N days" are enforced.
+- **Wallet** (🎟️ in the top bar): active codes with a badge count, plus used and expired ones. Each opens a full-screen **QR + code** to show at the counter.
+- **Validation** (`/validate`): staff type the code (case, spaces and dashes don't matter) or tap **Scan QR** to use the camera. The QR holds a link to `/validate?code=…`, so a normal phone camera opens the page with the code filled in. Staff see the offer, the player's display name and any rules to check (first visit, minimum spend), then **Confirm & mark as used**. Codes are **single-use** and only valid at the issuing business.
+- ⚠️ **Demo limitation:** the mock adapter stores everything in the browser's localStorage, so a code can only be validated in the same browser that unlocked it, and staff pick their business from a list. With Supabase, staff will sign in and the server will enforce ownership and single use.
 
 ## Controls
 

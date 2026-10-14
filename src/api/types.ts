@@ -13,6 +13,10 @@ import type {
   SearchParams,
   Subcategory,
 } from '@/types/business';
+import type { ContactKind, Session } from '@/types/player';
+import type { LookupResult, RedemptionMethod, UnlockError, WalletItem } from '@/types/promo';
+
+export type UnlockResult = { ok: true; item: WalletItem; already: boolean } | { ok: false; error: UnlockError };
 
 export interface WorldData {
   districts: District[];
@@ -39,6 +43,31 @@ export interface HeapsparkApi {
     search(params: SearchParams): Promise<MapBusiness[]>;
     /** Full card data for one business (null if unknown/unapproved). */
     getBusiness(id: string): Promise<BusinessDetail | null>;
+  };
+  auth: {
+    getSession(): Promise<Session | null>;
+    /**
+     * Send a one-time sign-in code by email or SMS. The mock adapter
+     * returns it as `demoCode` so it can be shown on screen.
+     */
+    requestCode(kind: ContactKind, contact: string): Promise<{ demoCode?: string }>;
+    /** Verify the code. New players must give a display name and accept the privacy notice. */
+    verifyCode(input: { kind: ContactKind; contact: string; code: string; displayName?: string; acceptPrivacy?: boolean }): Promise<Session>;
+    signOut(): Promise<void>;
+    /** Erase the player's personal data (Data Protection Act right to erasure). */
+    deleteAccount(): Promise<void>;
+  };
+  promos: {
+    /** Unlock (or re-show) the signed-in player's unique code for a promo. */
+    unlock(promoId: string): Promise<UnlockResult>;
+    /** The signed-in player's codes, newest first. */
+    wallet(): Promise<WalletItem[]>;
+  };
+  validation: {
+    /** Look a code up at the counter (does not redeem). */
+    lookup(businessId: string, code: string): Promise<LookupResult>;
+    /** Mark a code as used. Single-use: a second call fails with already-redeemed. */
+    redeem(businessId: string, code: string, method: RedemptionMethod): Promise<LookupResult>;
   };
   events: {
     /** Fire-and-forget interaction tracking (views, card opens, clicks). */

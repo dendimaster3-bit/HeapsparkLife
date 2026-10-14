@@ -8,15 +8,16 @@ import { TOWNS, TOWNS_BY_ID } from '@/data/towns';
 import { LANDMARKS } from '@/data/landmarks';
 import { CATEGORIES, CATEGORIES_BY_ID, SUBCATEGORIES, SUBCATEGORIES_BY_ID } from '@/data/categories';
 import { DEMO_BUSINESSES } from '@/data/demoBusinesses';
-import { DEMO_PROMOS } from '@/data/demoPromos';
 import { isOpenAt, mauritiusWeekday } from '@/lib/hours';
 import { mauritiusHour } from '@/lib/time';
 import { normalize } from '@/lib/text';
 import type { AnalyticsEvent, Business, EventSummary, MapBusiness } from '@/types/business';
+import { isPromoLive } from '@/lib/promo';
 import type { HeapsparkApi } from '../types';
+import { db } from './db';
+import { authApi, promosApi, validationApi } from './players';
 
-const activePromos = (businessId: string) =>
-  DEMO_PROMOS.filter((p) => p.businessId === businessId && Date.parse(p.expiresAt) > Date.now());
+const activePromos = (businessId: string) => db().promos.filter((p) => p.businessId === businessId && isPromoLive(p));
 
 const toMap = (b: Business): MapBusiness => ({ ...b, activePromoCount: activePromos(b.id).length });
 
@@ -131,6 +132,10 @@ export const mockApi: HeapsparkApi = {
       };
     },
   },
+
+  auth: authApi,
+  promos: promosApi,
+  validation: validationApi,
 
   events: {
     track(type, businessId) {

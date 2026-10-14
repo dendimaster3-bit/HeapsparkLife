@@ -9,6 +9,10 @@ import { DistrictToast } from './hud/DistrictToast';
 import { DebugPanel } from './hud/DebugPanel';
 import { BusinessCard } from './card/BusinessCard';
 import { SearchSheet } from './search/SearchSheet';
+import { AuthSheet } from './auth/AuthSheet';
+import { WalletSheet } from './wallet/WalletSheet';
+import { CodeModal } from './wallet/CodeModal';
+import { useSessionStore } from '@/store/useSessionStore';
 import { useCameraStore } from '@/store/useCameraStore';
 
 // The 3D engine is its own chunk so the intro paints instantly.
@@ -23,9 +27,11 @@ export default function GamePage() {
   const [sceneReady, setSceneReady] = useState(false);
   const level = useCameraStore((s) => s.level);
 
+  const initSession = useSessionStore((s) => s.init);
   useEffect(() => {
     void load();
-  }, [load]);
+    void initSession();
+  }, [load, initSession]);
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -40,6 +46,9 @@ export default function GamePage() {
           {level === 'business' ? <BusinessCard /> : <Navigator />}
           <DistrictToast />
           <SearchSheet />
+          <WalletSheet />
+          <CodeModal />
+          <AuthSheet />
         </>
       )}
       {debug && <DebugPanel />}

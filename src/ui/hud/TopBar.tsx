@@ -9,6 +9,8 @@ import { formatHour } from '@/lib/time';
 import { SettingsMenu } from './SettingsMenu';
 import { HighlightChip } from './HighlightChip';
 import { useSearchStore } from '@/store/useSearchStore';
+import { useSessionStore } from '@/store/useSessionStore';
+import { codeState } from '@/lib/promo';
 
 const base = 'flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-semibold shadow-md backdrop-blur';
 const chip = `${base} bg-white/90 text-slate-800 dark:bg-slate-900/85 dark:text-slate-100`;
@@ -20,6 +22,8 @@ export function TopBar() {
   const daylight = useClockStore((s) => s.daylight);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const openSearch = useSearchStore((s) => s.setOpen);
+  const setWalletOpen = useSessionStore((s) => s.setWalletOpen);
+  const activeCodes = useSessionStore((s) => s.wallet.filter((w) => codeState(w.code) === 'active').length);
 
   const district = districtId ? DISTRICTS_BY_ID[districtId] : null;
   const town = townId ? TOWNS_BY_ID[townId] : null;
@@ -50,6 +54,14 @@ export function TopBar() {
       <div className="pointer-events-auto flex shrink-0 flex-wrap items-center justify-end gap-2">
         <button className={`${chip} w-11 justify-center px-0`} onClick={() => openSearch(true)} aria-label={t('search.open')}>
           <span aria-hidden className="text-lg">🔍</span>
+        </button>
+        <button className={`${chip} relative w-11 justify-center px-0`} onClick={() => setWalletOpen(true)} aria-label={`${t('wallet.open')}${activeCodes ? ` (${activeCodes})` : ''}`}>
+          <span aria-hidden className="text-lg">🎟️</span>
+          {activeCodes > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-yellow-400 px-1 text-xs font-black text-yellow-950" aria-hidden>
+              {activeCodes}
+            </span>
+          )}
         </button>
         <span className={chip} title={t('hud.timeLabel')} aria-label={`${t('hud.timeLabel')} ${formatHour(hour)}`}>
           <span aria-hidden>{daylight > 0.5 ? '☀️' : '🌙'}</span>
