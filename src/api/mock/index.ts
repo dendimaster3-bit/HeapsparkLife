@@ -7,24 +7,29 @@ import { DISTRICTS, DISTRICTS_BY_ID } from '@/data/districts';
 import { TOWNS, TOWNS_BY_ID } from '@/data/towns';
 import { LANDMARKS } from '@/data/landmarks';
 import { CATEGORIES, CATEGORIES_BY_ID, SUBCATEGORIES, SUBCATEGORIES_BY_ID } from '@/data/categories';
-import { DEMO_BUSINESSES } from '@/data/demoBusinesses';
 import { isOpenAt, mauritiusWeekday } from '@/lib/hours';
 import { mauritiusHour } from '@/lib/time';
 import { normalize } from '@/lib/text';
-import type { AnalyticsEvent, Business, EventSummary, MapBusiness } from '@/types/business';
+import type { Business, EventSummary, GrowthLevel, MapBusiness } from '@/types/business';
 import { isPromoLive } from '@/lib/promo';
 import type { HeapsparkApi } from '../types';
-import { db } from './db';
+import { db, onDbChange } from './db';
 import { authApi, promosApi, validationApi } from './players';
 import { progressApi } from './progress';
 import { adsApi, partnersApi } from './ads';
+import { businessApi } from './business';
+import { adminApi } from './admin';
 
 const activePromos = (businessId: string) => db().promos.filter((p) => p.businessId === businessId && isPromoLive(p));
 
 const toMap = (b: Business): MapBusiness => {
   const roles = db().partners.filter((p) => p.businessId === b.id);
+  // Growth: 5 redemptions → level 2, 20 → level 3 (never below the stored level).
+  const redeemed = db().redemptions.filter((r) => r.businessId === b.id).length;
+  const earned = (redeemed >= 20 ? 3 : redeemed >= 5 ? 2 : 1) as GrowthLevel;
   return {
     ...b,
+    growthLevel: Math.max(b.growthLevel, earned) as GrowthLevel,
     activePromoCount: activePromos(b.id).length,
     partner: {
       district: roles.find((p) => p.type === 'districtFounding')?.districtId,
@@ -33,40 +38,24 @@ const toMap = (b: Business): MapBusiness => {
   };
 };
 
-const approved = () => DEMO_BUSINESSES.filter((b) => b.status === 'approved');
+const approved = () => db().businesses.filter((b) => b.status === 'approved');
 
-/** Text the search matches against, built once per business. */
-const haystack = new Map<string, { name: string; rest: string }>();
+/** Text the search matches against (cheap enough to rebuild per search). */
 function searchText(b: Business) {
-  let h = haystack.get(b.id);
-  if (!h) {
-    const sub = SUBCATEGORIES_BY_ID[b.subcategoryId];
-    const cat = sub && CATEGORIES_BY_ID[sub.categoryId];
-    h = {
-      name: normalize(b.name),
-      rest: normalize(
-        [sub?.name, cat?.name, TOWNS_BY_ID[b.townId]?.name, DISTRICTS_BY_ID[b.districtId]?.name, b.description]
-          .filter(Boolean)
-          .join(' '),
-      ),
-    };
-    haystack.set(b.id, h);
-  }
-  return h;
+  const sub = SUBCATEGORIES_BY_ID[b.subcategoryId];
+  const cat = sub && CATEGORIES_BY_ID[sub.categoryId];
+  return {
+    name: normalize(b.name),
+    rest: normalize(
+      [sub?.name, cat?.name, TOWNS_BY_ID[b.townId]?.name, DISTRICTS_BY_ID[b.districtId]?.name, b.description].filter(Boolean).join(' '),
+    ),
+  };
 }
 
-// --- events (localStorage, capped) -----------------------------------------
-const EVENTS_KEY = 'hs.events';
-const MAX_EVENTS = 5000;
-function readEvents(): AnalyticsEvent[] {
-  try {
-    return JSON.parse(localStorage.getItem(EVENTS_KEY) ?? '[]') as AnalyticsEvent[];
-  } catch {
-    return [];
-  }
-}
+import { readEvents, writeEvent } from './events';
 
 export const mockApi: HeapsparkApi = {
+  subscribe: onDbChange,
   geo: {
     async getWorld() {
       return {
@@ -86,8 +75,10 @@ export const mockApi: HeapsparkApi = {
       const { getAllPlots } = await import('@/game/world/plots');
       const businesses = approved().filter((b) => b.districtId === districtId).map(toMap);
       const byPlot = new Map(businesses.map((b) => [b.plotId, b.id]));
+      // Plots claimed by a business awaiting approval are reserved: not offered.
+      const reserved = new Set(db().businesses.filter((b) => b.status === 'pending').map((b) => b.plotId));
       const plots = getAllPlots()
-        .filter((p) => p.districtId === districtId)
+        .filter((p) => p.districtId === districtId && !reserved.has(p.id))
         .map((p) => ({ ...p, businessId: byPlot.get(p.id) ?? null }));
       return { plots, businesses };
     },
@@ -153,16 +144,12 @@ export const mockApi: HeapsparkApi = {
   progress: progressApi,
   ads: adsApi,
   partners: partnersApi,
+  business: businessApi,
+  admin: adminApi,
 
   events: {
     track(type, businessId) {
-      try {
-        const events = readEvents();
-        events.push({ type, businessId, at: new Date().toISOString() });
-        localStorage.setItem(EVENTS_KEY, JSON.stringify(events.slice(-MAX_EVENTS)));
-      } catch {
-        /* storage unavailable: tracking is best-effort */
-      }
+      writeEvent({ type, businessId, at: new Date().toISOString() });
     },
     async summary(businessId) {
       const out: EventSummary = { view: 0, cardOpen: 0, call: 0, whatsapp: 0, website: 0, share: 0, adClick: 0 };

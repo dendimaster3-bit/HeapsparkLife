@@ -4,6 +4,10 @@
  */
 import type { District, DistrictId, Landmark, Town } from '@/types/geo';
 import type {
+  ApprovalStatus,
+  Business,
+  BusinessInput,
+  BusinessStats,
   AnalyticsEventType,
   BusinessDetail,
   Category,
@@ -16,7 +20,8 @@ import type {
 import type { Award, ContactKind, Progress, Session } from '@/types/player';
 import type { LookupResult, RedemptionMethod, UnlockError, WalletItem } from '@/types/promo';
 
-import type { AdPlacement, PartnerView } from '@/types/ads';
+import type { AdBooking, AdPlacement, AdSlot, PartnerType, PartnerView } from '@/types/ads';
+import type { Promo, PromoStatus } from '@/types/promo';
 
 export type UnlockResult = { ok: true; item: WalletItem; already: boolean; awards: Award[] } | { ok: false; error: UnlockError };
 
@@ -28,7 +33,27 @@ export interface WorldData {
   subcategories: Subcategory[];
 }
 
+/** Fields a business owner can set on a promo. */
+export type PromoInput = Pick<Promo, 'title' | 'description' | 'discountType' | 'discountValue' | 'quantityLimit' | 'expiresAt' | 'codeValidDays' | 'rules'> & {
+  id?: string;
+  businessId: string;
+};
+
+export type AdRequest = Pick<AdBooking, 'slotId' | 'creative' | 'startDate' | 'endDate' | 'linkUrl'> & { businessId: string };
+
+export interface AdminOverview {
+  businesses: Record<ApprovalStatus, number>;
+  foundingMembers: number;
+  players: number;
+  promos: { pending: number; active: number };
+  codes: { unlocked: number; redeemed: number };
+  events: EventSummary;
+  ads: { booked: number; slots: number; impressions: number; clicks: number };
+}
+
 export interface HeapsparkApi {
+  /** Notifies when data changes (another tab, an approval…). Returns unsubscribe. */
+  subscribe(cb: () => void): () => void;
   geo: {
     /** Everything needed to draw the base map. Fetched once at startup. */
     getWorld(): Promise<WorldData>;
@@ -89,6 +114,43 @@ export interface HeapsparkApi {
     dailyVisit(): Promise<Award[]>;
     /** Stamp the passport + points the first time a district is explored. */
     visitDistrict(districtId: DistrictId): Promise<Award[]>;
+  };
+  business: {
+    /** Businesses owned by the signed-in player (any status). */
+    mine(): Promise<Business[]>;
+    get(id: string): Promise<Business | null>;
+    /** Plot ids already taken (approved or awaiting approval). */
+    takenPlotIds(): Promise<string[]>;
+    /** Claim a plot: creates a business awaiting admin approval. */
+    claim(input: BusinessInput): Promise<Business>;
+    update(id: string, patch: Partial<BusinessInput>): Promise<Business>;
+    promos(businessId: string): Promise<Promo[]>;
+    /** Create/edit a promo. New or edited promos go back to admin approval. */
+    savePromo(input: PromoInput): Promise<Promo>;
+    setPromoPaused(promoId: string, paused: boolean): Promise<void>;
+    stats(businessId: string): Promise<BusinessStats>;
+    /** Ask to book an ad slot (admin approves). */
+    requestAd(req: AdRequest): Promise<AdBooking>;
+    bookings(businessId: string): Promise<AdBooking[]>;
+    /** Demo only: become the owner of a demo business to try the portal. */
+    demoTakeOver?(businessId: string): Promise<void>;
+  };
+  admin: {
+    isAdmin(): Promise<boolean>;
+    /** Demo only: grant the signed-in player the admin role. */
+    becomeDemoAdmin?(): Promise<void>;
+    overview(): Promise<AdminOverview>;
+    businesses(): Promise<Business[]>;
+    setBusinessStatus(id: string, status: ApprovalStatus, note?: string): Promise<void>;
+    setFoundingMember(id: string, on: boolean): Promise<void>;
+    removePhoto(id: string, index: number): Promise<void>;
+    promos(): Promise<(Promo & { businessName: string })[]>;
+    setPromoStatus(id: string, status: PromoStatus): Promise<void>;
+    assignPartner(type: PartnerType, key: string, businessId: string | null): Promise<void>;
+    slots(): Promise<(AdSlot & { bookings: AdBooking[]; impressions: number; clicks: number })[]>;
+    setSlotPrice(slotId: string, pricePerMonthRs: number): Promise<void>;
+    saveBooking(b: Omit<AdBooking, 'id' | 'impressions' | 'clicks' | 'isDemo'> & { id?: string }): Promise<AdBooking>;
+    setBookingStatus(id: string, status: AdBooking['status']): Promise<void>;
   };
   events: {
     /** Fire-and-forget interaction tracking (views, card opens, clicks). */

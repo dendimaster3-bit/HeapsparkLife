@@ -13,6 +13,7 @@ import { intlLocale, useT, type TranslationKey } from '@/i18n';
 import { useUiStore } from '@/store/useUiStore';
 import { discountBadge, normalizeCode } from '@/lib/promo';
 import { useApplyTheme } from '@/lib/useTheme';
+import { useSessionStore } from '@/store/useSessionStore';
 import type { MapBusiness } from '@/types/business';
 import type { LookupResult, RedemptionMethod } from '@/types/promo';
 import { inputCls, primaryBtn } from '@/ui/common/Sheet';
@@ -41,9 +42,27 @@ export default function ValidatePage() {
   const [cameraError, setCameraError] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const session = useSessionStore((s) => s.session);
+  const initSession = useSessionStore((s) => s.init);
+  const [ownsAny, setOwnsAny] = useState(false);
   useEffect(() => {
-    void api.directory.search({}).then((list) => setBusinesses(list.sort((a, b) => b.activePromoCount - a.activePromoCount || a.name.localeCompare(b.name))));
-  }, []);
+    void initSession();
+  }, [initSession]);
+  // Owners only see their own businesses; otherwise (demo) every business.
+  useEffect(() => {
+    void (async () => {
+      const mine = session ? (await api.business.mine()).filter((b) => b.status === 'approved') : [];
+      setOwnsAny(mine.length > 0);
+      if (mine.length) {
+        const all = await api.directory.search({});
+        setBusinesses(all.filter((b) => mine.some((m) => m.id === b.id)));
+        if (!mine.some((m) => m.id === businessId)) pickBusiness(mine[0].id);
+      } else {
+        const list = await api.directory.search({});
+        setBusinesses(list.sort((a, b) => b.activePromoCount - a.activePromoCount || a.name.localeCompare(b.name)));
+      }
+    })();
+  }, [session]);
 
   const pickBusiness = (id: string) => {
     setBusinessId(id);
@@ -107,7 +126,7 @@ export default function ValidatePage() {
           <h1 className="text-2xl font-extrabold">{t('validate.title')}</h1>
         </header>
 
-        <p className="rounded-2xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">{t('validate.demoNote')}</p>
+        {!ownsAny && <p className="rounded-2xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">{t('validate.demoNote')}</p>}
 
         <label className="block">
           <span className="mb-1 block text-sm font-semibold">{t('validate.business')}</span>

@@ -170,5 +170,6 @@ export const mfe: Partial<Record<TranslationKey, string>> = {
   'partner.slotOpen': 'Plas partener fondater disponib',
   'partner.founder': 'Partener fondater: {name}',
   'partner.becomeOne': 'Vinn partener fondater sa distrik-la',
+  'account.forBusiness': 'Pou biznes: pran ou plas',
   'debug.realTime': 'Ler reel',
 };

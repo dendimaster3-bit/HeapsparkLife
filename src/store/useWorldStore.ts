@@ -19,6 +19,8 @@ interface WorldState {
   districts: Partial<Record<DistrictId, DistrictContent>>;
   load(): Promise<void>;
   loadDistrict(id: DistrictId): Promise<void>;
+  /** Re-fetch every district already loaded (after data changed). */
+  reloadLoaded(): Promise<void>;
 }
 
 const inflight = new Set<DistrictId>();
@@ -44,6 +46,11 @@ export const useWorldStore = create<WorldState>((set, get) => ({
     } finally {
       inflight.delete(id);
     }
+  },
+  reloadLoaded: async () => {
+    const ids = Object.keys(get().districts) as DistrictId[];
+    const fresh = await Promise.all(ids.map(async (id) => [id, await api.map.getDistrict(id)] as const));
+    set({ districts: Object.fromEntries(fresh) });
   },
 }));
 

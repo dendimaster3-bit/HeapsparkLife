@@ -1,5 +1,4 @@
 /** Mock auth, promo unlocking and validation on top of the local db. */
-import { DEMO_BUSINESSES } from '@/data/demoBusinesses';
 import { codeState, generateCode, isPromoLive, normalizeCode, remaining } from '@/lib/promo';
 import type { ContactKind, Session } from '@/types/player';
 import type { LookupResult, PromoCode, RedemptionMethod, WalletItem } from '@/types/promo';
@@ -20,7 +19,7 @@ export function validContact(kind: ContactKind, contact: string): string | null 
 
 function toWallet(code: PromoCode): WalletItem | null {
   const promo = db().promos.find((p) => p.id === code.promoId);
-  const biz = DEMO_BUSINESSES.find((b) => b.id === code.businessId);
+  const biz = db().businesses.find((b) => b.id === code.businessId);
   if (!promo || !biz) return null;
   return { code, promo, businessName: biz.name, brandColor: biz.brandColor };
 }
@@ -131,7 +130,18 @@ export const promosApi: HeapsparkApi['promos'] = {
   },
 };
 
+/**
+ * Staff signed in with an account that owns businesses may only validate
+ * for those. (Demo mode lets anyone else pick any business.)
+ */
+function mayValidate(businessId: string) {
+  const me = currentPlayer();
+  const owned = me ? db().businesses.filter((b) => b.ownerId === me.id) : [];
+  return owned.length === 0 || owned.some((b) => b.id === businessId);
+}
+
 function lookupInternal(businessId: string, input: string): LookupResult & { row?: PromoCode } {
+  if (!mayValidate(businessId)) return { ok: false, reason: 'wrong-business' };
   const code = normalizeCode(input);
   const row = db().codes.find((c) => c.code === code);
   if (!row) return { ok: false, reason: 'not-found' };

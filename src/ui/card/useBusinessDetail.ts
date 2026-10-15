@@ -5,6 +5,11 @@ import type { BusinessDetail } from '@/types/business';
 
 const cache = new Map<string, BusinessDetail | null>();
 
+/** Forget cached cards (data changed elsewhere). */
+export function clearBusinessDetailCache() {
+  cache.clear();
+}
+
 export function useBusinessDetail(id: string | null) {
   const [detail, setDetail] = useState<BusinessDetail | null | undefined>(id ? cache.get(id) : null);
   const [version, setVersion] = useState(0);

@@ -12,4 +12,4 @@ if (adapter !== 'mock') {
 }
 
 export const api: HeapsparkApi = mockApi;
-export type { HeapsparkApi, WorldData } from './types';
+export type { AdminOverview, AdRequest, HeapsparkApi, PromoInput, WorldData } from './types';

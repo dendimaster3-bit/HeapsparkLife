@@ -5,12 +5,18 @@
  */
 import { DEMO_PROMOS } from '@/data/demoPromos';
 import { DEMO_BOOKINGS, DEMO_PARTNERS } from '@/data/demoAds';
-import type { AdBooking, Partner } from '@/types/ads';
+import type { AdBooking, AdSlot, Partner } from '@/types/ads';
+import type { Business } from '@/types/business';
+import { DEMO_BUSINESSES } from '@/data/demoBusinesses';
+import { AD_SLOTS } from '@/data/adSlots';
 import type { EarnedBadge, PassportStamp, Player, PointsEntry } from '@/types/player';
 import type { Promo, PromoCode, Redemption } from '@/types/promo';
 
 export interface MockDb {
   version: 1;
+  businesses: Business[];
+  /** Slot list (prices are editable by admin). */
+  slots: AdSlot[];
   promos: Promo[];
   codes: PromoCode[];
   redemptions: Redemption[];
@@ -32,6 +38,8 @@ const KEY = 'hs.db';
 function seed(): MockDb {
   return {
     version: 1,
+    businesses: structuredClone(DEMO_BUSINESSES),
+    slots: structuredClone(AD_SLOTS),
     promos: structuredClone(DEMO_PROMOS),
     codes: [],
     redemptions: [],
@@ -61,6 +69,9 @@ export function db(): MockDb {
     memory.bookings ??= structuredClone(DEMO_BOOKINGS);
     memory.partners ??= structuredClone(DEMO_PARTNERS);
     memory.slotStats ??= {};
+    memory.businesses ??= structuredClone(DEMO_BUSINESSES);
+    memory.slots ??= structuredClone(AD_SLOTS);
+    for (const sl of AD_SLOTS) if (!memory.slots.some((x) => x.id === sl.id)) memory.slots.push(structuredClone(sl));
     // Add promos introduced by newer seed data.
     for (const p of DEMO_PROMOS) if (!memory.promos.some((x) => x.id === p.id)) memory.promos.push(structuredClone(p));
   } catch {
@@ -69,12 +80,36 @@ export function db(): MockDb {
   return memory;
 }
 
-export function save() {
+const listeners = new Set<() => void>();
+
+/** Subscribe to data changes (the Supabase adapter will use realtime). */
+export function onDbChange(cb: () => void) {
+  listeners.add(cb);
+  return () => void listeners.delete(cb);
+}
+
+/**
+ * Persist and notify. Returns false if the browser's storage is full
+ * (uploaded images live here in demo mode), true otherwise.
+ */
+export function save(): boolean {
+  let ok = true;
   try {
     localStorage.setItem(KEY, JSON.stringify(db()));
-  } catch {
-    /* storage unavailable: keep working in memory */
+  } catch (e) {
+    ok = !(e instanceof DOMException && e.name === 'QuotaExceededError');
   }
+  listeners.forEach((cb) => cb());
+  return ok;
+}
+
+// Other tabs (e.g. /validate or /admin open next to the game) see changes too.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key !== KEY) return;
+    memory = null;
+    listeners.forEach((cb) => cb());
+  });
 }
 
 /** Random id (works on plain-http LAN testing where randomUUID is unavailable). */

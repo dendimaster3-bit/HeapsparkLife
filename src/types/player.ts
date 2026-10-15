@@ -14,6 +14,8 @@ export interface Player {
   createdAt: string;
   /** When the player accepted the privacy notice. */
   privacyAcceptedAt: string;
+  /** Extra permissions (admin panel). */
+  roles?: 'admin'[];
 }
 
 export interface Session {

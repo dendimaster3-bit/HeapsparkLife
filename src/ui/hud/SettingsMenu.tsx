@@ -62,6 +62,7 @@ export function SettingsMenu({ onClose }: { onClose: () => void }) {
             <Link to="/privacy" className="underline">{t('account.privacy')}</Link>
             <Link to="/terms" className="underline">{t('account.terms')}</Link>
           </p>
+          <Link to="/business" className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-slate-100 text-sm font-bold dark:bg-slate-800">🏪 {t('account.forBusiness')}</Link>
         </div>
         <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">{t('legal.pointsNotMoney')}</p>
       </div>

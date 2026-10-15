@@ -208,6 +208,7 @@ export const en = {
   'partner.slotOpen': 'Founding partner slot available',
   'partner.founder': 'Founding partner: {name}',
   'partner.becomeOne': "Become this district's founding partner",
+  'account.forBusiness': 'For businesses: claim your spot',
   'debug.realTime': 'Real time',
   'district.port-louis.blurb': 'The capital: bustling markets, the waterfront and the harbour.',
   'district.pamplemousses.blurb': 'Giant water lilies, sugar cane fields and the famous garden.',

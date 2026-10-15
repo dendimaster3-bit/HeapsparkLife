@@ -4,6 +4,10 @@ A cozy, low-poly 3D Mauritius for [heapspark.com](https://heapspark.com): explor
 
 See [PLAN.md](PLAN.md) for the architecture, data model and build plan.
 
+## Status
+
+All MVP steps (a)–(g) are built and run fully in the browser on demo data. Next: the Supabase adapter (`src/api/supabase`, same `HeapsparkApi` interface) with Row Level Security for ownership, admin role and single-use redemption, plus real email/SMS one-time codes. The business portal and admin panel are English-only for now; the player-facing game is in English, French and Kreol Morisien.
+
 ## Run it
 
 ```bash
@@ -20,7 +24,7 @@ Handy URL flags:
 | `?debug` | FPS / draw-call / triangle meter and a time-of-day slider |
 | `?hour=19.5` | Force the Mauritius time (e.g. to see the night lights) |
 
-Pages: `/` the game · `/validate` code validation for shop staff · `/privacy` · `/terms` · `/kit` building-kit showroom (toggle open/closed, promo, growth level, gold, night).
+Pages: `/` the game · `/business` business portal · `/admin` admin panel · `/validate` code validation for shop staff · `/privacy` · `/terms` · `/kit` building-kit showroom (toggle open/closed, promo, growth level, gold, night). The settings menu links to the business portal.
 
 Copy `.env.example` to `.env` to change the data adapter (`VITE_API`) or serve from a sub-path (`VITE_BASE=/life/`).
 
@@ -95,6 +99,25 @@ A creative is either an uploaded image or simple text (headline, line, colour) d
 - **Founding Member** (first 100 businesses): permanent gold skin + star (flag on the business).
 - **District Founding Partner** (one per district): its name on a gold gateway over the road into the district, a landmark-style building (bigger, gold, plaza with flags), and a "Founding partner: …" line on the district welcome card. Empty districts show "Founding partner slot available".
 - **Category Founding Partner** (one per subcategory): always first in search results for its category/type, with a 🏆 badge, and a gold building.
+
+## Business portal (`/business`)
+
+- **Claim a spot** in 4 steps: district → town → free plot (or tap "Claim this spot" on the map) · name, category/type, description, phone/WhatsApp/website, opening hours · building style, brand colour, logo and up to 3 photos with a **live 3D preview** · review and agree to the terms. The listing then waits for admin approval; its plot is reserved meanwhile.
+- **Manage**: edit details; **promos** (title, % / Rs / freebie, quantity limit, expiry, per-code validity, first-visit-only, minimum spend), which go to admin approval and can be paused; **stats** (building views, card opens, shares, calls, WhatsApp and website taps, ad views/clicks, codes unlocked vs redeemed per promo); **advertise** (request an ad slot with a text or image creative and dates).
+- **Validate** (`/validate`): staff signed in with a business account only see and can only redeem codes for their own businesses.
+- Uploads are resized in the browser (logo 256 px PNG, photos 720 px JPEG).
+- Demo mode: "Manage a demo business" lets you take over a demo listing to try the dashboard.
+
+## Admin panel (`/admin`)
+
+- **Overview**: queues waiting for review plus directory, promo, engagement and ad numbers.
+- **Businesses**: approve / reject (with a note to the owner) / suspend, remove photos (moderation), make or remove Founding Member. The first 100 approved businesses automatically become Founding Members (numbered, permanent).
+- **Promos**: approve / reject / pause / resume.
+- **Founding partners**: assign the District Founding Partner for each district and the Category Founding Partner for each type.
+- **Ads**: edit monthly prices, see views/taps per slot, approve or reject requested bookings, end bookings, and create bookings with a text or image creative for any advertiser.
+- Admin is a role on the account. In demo mode any signed-in account can tap "Make me a demo admin"; with the real backend this is set server-side.
+
+Changes made in the portal or admin panel update the open game immediately (and other tabs, via storage events).
 
 ## Controls
 

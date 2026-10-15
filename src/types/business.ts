@@ -58,10 +58,15 @@ export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 export type WeeklyHours = Partial<Record<Weekday, [open: string, close: string][]>>;
 
 export type GrowthLevel = 1 | 2 | 3;
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
+/** suspended = hidden by moderation. */
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 
 export interface Business {
   id: string;
+  /** Player account that manages the business (unset for seed data). */
+  ownerId?: string;
+  /** Admin note when rejected/suspended. */
+  moderationNote?: string;
   name: string;
   subcategoryId: string;
   districtId: DistrictId;
@@ -78,6 +83,7 @@ export interface Business {
   hours: WeeklyHours;
   status: ApprovalStatus;
   /** 1–3, grows with reviews and redemptions. */
+  /** 1–3: the stored value, raised automatically by redemptions (see adapter). */
   growthLevel: GrowthLevel;
   /** First 100 approved businesses get the permanent gold skin. */
   isFoundingMember: boolean;
@@ -144,3 +150,30 @@ export interface AnalyticsEvent {
 }
 
 export type EventSummary = Record<AnalyticsEventType, number>;
+
+/** What a business owner fills in when claiming a plot. */
+export interface BusinessInput {
+  name: string;
+  subcategoryId: string;
+  plotId: string;
+  brandColor: string;
+  baseOverride?: BaseShape;
+  logoUrl?: string;
+  photos: string[];
+  description?: string;
+  phone?: string;
+  whatsapp?: string;
+  website?: string;
+  hours: WeeklyHours;
+}
+
+/** Simple stats for the business dashboard. */
+export interface BusinessStats {
+  events: EventSummary;
+  codesUnlocked: number;
+  codesRedeemed: number;
+  perPromo: { promoId: string; title: string; status: string; unlocked: number; redeemed: number; limit: number | null }[];
+  /** Ad clicks on this business's bookings. */
+  adImpressions: number;
+  adClicks: number;
+}

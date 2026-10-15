@@ -13,6 +13,7 @@ interface AdsState {
   partners: PartnerView[];
   loaded: boolean;
   load(): Promise<void>;
+  reload(): Promise<void>;
   byType(type: AdSlotType): AdPlacement[];
   click(p: AdPlacement): void;
 }
@@ -25,6 +26,10 @@ export const useAdsStore = create<AdsState>((set, get) => ({
     if (get().loaded) return;
     const [placements, partners] = await Promise.all([api.ads.list(), api.partners.list()]);
     set({ placements, partners, loaded: true });
+  },
+  reload: async () => {
+    set({ loaded: false });
+    await get().load();
   },
   byType: (type) => get().placements.filter((p) => p.slot.type === type),
   click: ({ slot, booking }) => {

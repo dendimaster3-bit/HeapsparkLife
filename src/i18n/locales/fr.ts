@@ -208,6 +208,7 @@ export const fr: Partial<Record<TranslationKey, string>> = {
   'partner.slotOpen': 'Place de partenaire fondateur disponible',
   'partner.founder': 'Partenaire fondateur : {name}',
   'partner.becomeOne': 'Devenez partenaire fondateur de ce district',
+  'account.forBusiness': 'Professionnels : réservez votre place',
   'debug.realTime': 'Heure réelle',
   'district.port-louis.blurb': 'La capitale : marchés animés, le front de mer et le port.',
   'district.pamplemousses.blurb': 'Nénuphars géants, champs de canne et le célèbre jardin.',

@@ -4,6 +4,9 @@ import { RouterProvider } from 'react-router-dom';
 import { useApplyTheme } from '@/lib/useTheme';
 import { useUiStore } from '@/store/useUiStore';
 import { router } from '@/router';
+import { startLiveData } from '@/lib/liveData';
+
+startLiveData();
 
 export default function App() {
   useApplyTheme();
