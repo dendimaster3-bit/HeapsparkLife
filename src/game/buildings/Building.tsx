@@ -20,6 +20,7 @@ import { PromoBeam } from './decorators/PromoBeam';
 import { GrowthExtras } from './decorators/GrowthExtras';
 import { FoundingStar } from './decorators/FoundingStar';
 import { SearchPin } from './decorators/SearchPin';
+import { LandmarkPlaza } from './decorators/LandmarkPlaza';
 
 export interface BuildingVisual {
   name: string;
@@ -35,6 +36,8 @@ export interface BuildingVisual {
   selected?: boolean;
   /** Highlighted as a search result. */
   pinned?: boolean;
+  /** District Founding Partner: landmark-style building. */
+  landmark?: boolean;
 }
 
 /** Growth makes the whole building a little bigger. */
@@ -61,6 +64,7 @@ export function BuildingFull(v: BuildingVisual) {
       </Suspense>
       <Signboard spec={spec} name={v.name} brand={v.brand} logoUrl={v.logoUrl} open={v.open} />
       <GrowthExtras {...part} level={v.level} />
+      {v.landmark && <LandmarkPlaza spec={spec} brand={v.brand} />}
       {v.gold && <FoundingStar y={spec.top + 2.1} />}
     </group>
   );

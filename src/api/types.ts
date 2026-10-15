@@ -16,6 +16,8 @@ import type {
 import type { Award, ContactKind, Progress, Session } from '@/types/player';
 import type { LookupResult, RedemptionMethod, UnlockError, WalletItem } from '@/types/promo';
 
+import type { AdPlacement, PartnerView } from '@/types/ads';
+
 export type UnlockResult = { ok: true; item: WalletItem; already: boolean; awards: Award[] } | { ok: false; error: UnlockError };
 
 export interface WorldData {
@@ -68,6 +70,17 @@ export interface HeapsparkApi {
     lookup(businessId: string, code: string): Promise<LookupResult>;
     /** Mark a code as used. Single-use: a second call fails with already-redeemed. */
     redeem(businessId: string, code: string, method: RedemptionMethod): Promise<LookupResult>;
+  };
+  ads: {
+    /** Every ad slot with today's booking (null = available). */
+    list(): Promise<AdPlacement[]>;
+    /** Count that a slot was shown (once per session per slot). */
+    trackImpression(slotId: string): void;
+    /** Count a tap on a slot (booked or empty). */
+    trackClick(slotId: string): void;
+  };
+  partners: {
+    list(): Promise<PartnerView[]>;
   };
   progress: {
     /** Points, ledger, passport stamps and badges (player, or local guest). */

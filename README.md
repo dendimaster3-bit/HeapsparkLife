@@ -76,6 +76,26 @@ Plots are generated along the streets of every town (`src/game/world/plots.ts`, 
 - **Guests earn too.** Their progress is kept on the device and merged into the account when they sign in. Points for a code redeemed at a shop appear as a toast the next time the player opens the game.
 - **Share cards:** "I unlocked 15% off at X in Heapspark Life!" (from the code screen) and "I've explored 5/9 districts…" (from the passport). A 1080×1080 image is drawn on a canvas with the island outline, and shared via the phone's share sheet (with the image where supported), WhatsApp, Facebook, Save image or Copy link. The personal code is never shared. Links like `/?b=<businessId>` open the game and fly to that business; `/?d=<districtId>` opens a district.
 
+## Ads and founding partners
+
+**Ad slots** are data (`src/data/adSlots.ts`): id, type, place, monthly price (placeholder MUR). Bookings (advertiser, creative, link, start/end, impressions, clicks) are separate, so admin can schedule them in step (g).
+
+| Slot | Where |
+|---|---|
+| Motorway billboards | along the M1/M2 at a fraction of the road, automatically kept clear of business plots |
+| Town entrances | beside the road at the edge of a town |
+| Bus stops | small shelters with a poster in town centres |
+| Airport arrival banner | beside the terminal **and** as the welcome card players see right after "Start exploring" |
+| Plane banner | towed behind the plane looping over the beaches |
+| Loading screen sponsor | on the welcome screen |
+
+A creative is either an uploaded image or simple text (headline, line, colour) drawn on a canvas. Empty slots show **"Advertise here — heapspark.com/advertise"**. Every tap is tracked per slot (empty slots too, to show demand); tapping a booked ad flies to the advertiser's building or opens their link. Impressions count once per session when the player is in the slot's district. To keep phones fast, only the current district's ads are mounted.
+
+**Founding partners** (`partners` table, assigned by an admin):
+- **Founding Member** (first 100 businesses): permanent gold skin + star (flag on the business).
+- **District Founding Partner** (one per district): its name on a gold gateway over the road into the district, a landmark-style building (bigger, gold, plaza with flags), and a "Founding partner: …" line on the district welcome card. Empty districts show "Founding partner slot available".
+- **Category Founding Partner** (one per subcategory): always first in search results for its category/type, with a 🏆 badge, and a gold building.
+
 ## Controls
 
 - **Phone:** drag to move, pinch to zoom, two fingers to rotate/tilt.

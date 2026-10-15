@@ -1,6 +1,6 @@
 # Heapspark Life — Step 1 Proposal
 
-> Status: **approved**. Progress: ✅ (a) island + camera · ✅ (b) building kit · ✅ (c) business cards + search · ✅ (d) promos + wallet + validation · ✅ (e) points + passport · ⏳ (f) ad slots + founding partners next.
+> Status: **approved**. Progress: ✅ (a) island + camera · ✅ (b) building kit · ✅ (c) business cards + search · ✅ (d) promos + wallet + validation · ✅ (e) points + passport · ✅ (f) ad slots + founding partners · ⏳ (g) business portal + admin next.
 
 ## 1. Architecture at a glance
 

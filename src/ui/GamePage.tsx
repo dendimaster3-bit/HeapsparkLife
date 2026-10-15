@@ -17,6 +17,8 @@ import { useProgressStore } from '@/store/useProgressStore';
 import { PassportSheet } from './passport/PassportSheet';
 import { ShareSheet } from './share/ShareSheet';
 import { Toasts } from './common/Toasts';
+import { ArrivalBanner } from './hud/ArrivalBanner';
+import { useAdsStore } from '@/store/useAdsStore';
 import { flyToBusiness } from '@/lib/navigation';
 import { DISTRICTS_BY_ID } from '@/data/districts';
 import type { DistrictId } from '@/types/geo';
@@ -59,6 +61,7 @@ export default function GamePage() {
   useEffect(() => {
     void load();
     void initSession();
+    void useAdsStore.getState().load();
   }, [load, initSession]);
 
   return (
@@ -73,6 +76,7 @@ export default function GamePage() {
           <TopBar />
           {level === 'business' ? <BusinessCard /> : <Navigator />}
           <DistrictToast />
+          <ArrivalBanner />
           <SearchSheet />
           <WalletSheet />
           <CodeModal />

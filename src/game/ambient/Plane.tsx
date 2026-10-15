@@ -1,12 +1,50 @@
 /**
- * A small plane looping around the island and over the airport. In step (f)
- * it will tow the "plane banner" ad slot.
+ * A small plane looping around the island over the beaches, towing the
+ * "plane banner" ad slot.
  */
 import { useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useAdsStore } from '@/store/useAdsStore';
+import { useUiStore } from '@/store/useUiStore';
+import { translate } from '@/i18n';
+import { creativeTexture } from '../ads/creativeTexture';
 
-const RX = 34, RZ = 40, ALT = 4.5, PERIOD = 90; // seconds per lap
+const BANNER_W = 3, BANNER_H = 0.6;
+/** Tilt the banner towards the sky so it reads from the usual top-down view. */
+const BANNER_TILT = 1.1;
+
+/** The "plane banner over the beach" ad slot, towed behind the plane. */
+function TowedBanner() {
+  const placement = useAdsStore((s) => s.placements.find((p) => p.slot.type === 'planeBanner'));
+  const click = useAdsStore((s) => s.click);
+  const locale = useUiStore((s) => s.locale);
+  const tex = creativeTexture(placement?.booking?.creative ?? null, BANNER_W / BANNER_H, translate(locale, 'ads.here'), 'heapspark.com/advertise');
+  const mat = useMemo(() => new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, toneMapped: false }), [tex]);
+  if (!placement) return null;
+  const tap = (e: ThreeEvent<MouseEvent>) => {
+    if (e.delta > 8) return;
+    e.stopPropagation();
+    click(placement);
+  };
+  return (
+    <group>
+      {/* Tow rope */}
+      <mesh position={[0, 0, -0.75]} rotation-x={Math.PI / 2}>
+        <cylinderGeometry args={[0.006, 0.006, 0.9, 4]} />
+        <meshBasicMaterial color="#334155" />
+      </mesh>
+      {/* Banner trails along the flight path, tilted up for readability. */}
+      <group position={[0, -0.05, -1.2 - BANNER_W / 2]} rotation-z={BANNER_TILT}>
+        <mesh material={mat} rotation-y={-Math.PI / 2} onClick={tap}>
+          <planeGeometry args={[BANNER_W, BANNER_H]} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+const RX = 27, RZ = 33, ALT = 3.5, PERIOD = 110; // seconds per lap
 
 export function Plane() {
   const ref = useRef<THREE.Group>(null);
@@ -18,10 +56,11 @@ export function Plane() {
     at(a, g.position);
     // Nose (+z) points along the path; slight bank into the turn.
     g.lookAt(at(a + 0.02, ahead));
-    g.rotateZ(-0.25);
+    g.rotateZ(-0.12);
   });
   return (
     <group ref={ref} name="plane">
+      <TowedBanner />
       <mesh rotation-x={Math.PI / 2}>
         <capsuleGeometry args={[0.08, 0.6, 2, 6]} />
         <meshLambertMaterial color="#ffffff" />

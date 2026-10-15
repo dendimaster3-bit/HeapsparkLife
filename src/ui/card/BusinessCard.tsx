@@ -49,6 +49,16 @@ function CardBody({ d, expanded, onChanged }: { d: BusinessDetail; expanded: boo
   return (
     <>
       <div className="flex flex-wrap gap-1.5 text-xs font-semibold">
+        {b.partner.district && (
+          <span className="rounded-full bg-gradient-to-r from-amber-300 to-yellow-200 px-2.5 py-1 text-amber-950">
+            🏛️ {t('partner.district')} · {DISTRICTS_BY_ID[b.partner.district]?.name}
+          </span>
+        )}
+        {b.partner.subcategory && (
+          <span className="rounded-full bg-gradient-to-r from-amber-300 to-yellow-200 px-2.5 py-1 text-amber-950">
+            🏆 {t('partner.category')} · {SUBCATEGORIES_BY_ID[b.partner.subcategory]?.name}
+          </span>
+        )}
         {b.isFoundingMember && (
           <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-900 dark:bg-amber-900 dark:text-amber-100">
             ★ {t('biz.founding', { n: b.foundingMemberNo ?? '' })}

@@ -4,6 +4,8 @@
  * exists; everything here happens on one device, so it's for demos only.
  */
 import { DEMO_PROMOS } from '@/data/demoPromos';
+import { DEMO_BOOKINGS, DEMO_PARTNERS } from '@/data/demoAds';
+import type { AdBooking, Partner } from '@/types/ads';
 import type { EarnedBadge, PassportStamp, Player, PointsEntry } from '@/types/player';
 import type { Promo, PromoCode, Redemption } from '@/types/promo';
 
@@ -16,6 +18,10 @@ export interface MockDb {
   ledger: PointsEntry[];
   stamps: PassportStamp[];
   badges: EarnedBadge[];
+  bookings: AdBooking[];
+  partners: Partner[];
+  /** Impressions/clicks per slot, including empty slots (shows demand). */
+  slotStats: Record<string, { impressions: number; clicks: number }>;
   sessionPlayerId: string | null;
   /** Pending one-time sign-in code (simulated SMS/email OTP). */
   otp: { contact: string; code: string; expiresAt: number } | null;
@@ -33,6 +39,9 @@ function seed(): MockDb {
     ledger: [],
     stamps: [],
     badges: [],
+    bookings: structuredClone(DEMO_BOOKINGS),
+    partners: structuredClone(DEMO_PARTNERS),
+    slotStats: {},
     sessionPlayerId: null,
     otp: null,
   };
@@ -49,6 +58,9 @@ export function db(): MockDb {
     memory.ledger ??= [];
     memory.stamps ??= [];
     memory.badges ??= [];
+    memory.bookings ??= structuredClone(DEMO_BOOKINGS);
+    memory.partners ??= structuredClone(DEMO_PARTNERS);
+    memory.slotStats ??= {};
     // Add promos introduced by newer seed data.
     for (const p of DEMO_PROMOS) if (!memory.promos.some((x) => x.id === p.id)) memory.promos.push(structuredClone(p));
   } catch {

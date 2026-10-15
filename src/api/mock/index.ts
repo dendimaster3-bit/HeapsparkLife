@@ -17,10 +17,21 @@ import type { HeapsparkApi } from '../types';
 import { db } from './db';
 import { authApi, promosApi, validationApi } from './players';
 import { progressApi } from './progress';
+import { adsApi, partnersApi } from './ads';
 
 const activePromos = (businessId: string) => db().promos.filter((p) => p.businessId === businessId && isPromoLive(p));
 
-const toMap = (b: Business): MapBusiness => ({ ...b, activePromoCount: activePromos(b.id).length });
+const toMap = (b: Business): MapBusiness => {
+  const roles = db().partners.filter((p) => p.businessId === b.id);
+  return {
+    ...b,
+    activePromoCount: activePromos(b.id).length,
+    partner: {
+      district: roles.find((p) => p.type === 'districtFounding')?.districtId,
+      subcategory: roles.find((p) => p.type === 'categoryFounding')?.subcategoryId,
+    },
+  };
+};
 
 const approved = () => DEMO_BUSINESSES.filter((b) => b.status === 'approved');
 
@@ -113,7 +124,9 @@ export const mockApi: HeapsparkApi = {
           }
           if (score < 0) continue;
         }
-        // Founding members and active promos get a gentle boost.
+        // Category Founding Partners always lead their subcategory's results;
+        // founding members and active promos get a gentle boost.
+        if (mb.partner.subcategory && (subcategoryId || categoryId || terms.length)) score += 100;
         score += (mb.isFoundingMember ? 0.3 : 0) + (mb.activePromoCount ? 0.2 : 0);
         scored.push({ b: mb, score });
       }
@@ -138,6 +151,8 @@ export const mockApi: HeapsparkApi = {
   promos: promosApi,
   validation: validationApi,
   progress: progressApi,
+  ads: adsApi,
+  partners: partnersApi,
 
   events: {
     track(type, businessId) {

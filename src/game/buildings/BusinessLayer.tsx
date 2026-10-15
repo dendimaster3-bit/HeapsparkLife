@@ -31,6 +31,10 @@ function BusinessBuilding({ business, plot }: { business: MapBusiness; plot: Plo
   const pinned = useSearchStore((s) => s.highlight.includes(business.id));
   const goBusiness = useCameraStore((s) => s.goBusiness);
   const { spec } = useBuildingSpec({ styleId, base });
+  // Founding Members and both kinds of Founding Partner get the gold skin;
+  // District Founding Partners also become a landmark.
+  const landmark = !!business.partner.district;
+  const gold = business.isFoundingMember || landmark || !!business.partner.subcategory;
 
   const [x, z] = plot.position;
   const y = heightAt(x, z);
@@ -41,7 +45,7 @@ function BusinessBuilding({ business, plot }: { business: MapBusiness; plot: Plo
   };
 
   return (
-    <group position={[x, y, z]} rotation-y={plot.rotation} scale={KIT_SCALE} name={business.id}>
+    <group position={[x, y, z]} rotation-y={plot.rotation} scale={KIT_SCALE * (landmark ? 1.35 : 1)} name={business.id}>
       <Building
         name={business.name}
         brand={business.brandColor}
@@ -51,7 +55,8 @@ function BusinessBuilding({ business, plot }: { business: MapBusiness; plot: Plo
         open={open}
         promo={business.activePromoCount > 0}
         level={business.growthLevel}
-        gold={business.isFoundingMember}
+        gold={gold}
+        landmark={landmark}
         selected={selected}
         pinned={pinned}
       />

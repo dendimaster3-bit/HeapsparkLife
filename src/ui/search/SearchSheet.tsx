@@ -44,6 +44,9 @@ function ResultRow({ b, onPick }: { b: MapBusiness; onPick: () => void }) {
           <span className="block truncate font-bold">
             {b.name} {b.isFoundingMember && <span className="text-amber-500" title={t('biz.founding', { n: b.foundingMemberNo ?? '' })}>★</span>}
           </span>
+          {b.partner.subcategory && (
+            <span className="mb-0.5 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900 dark:bg-amber-900 dark:text-amber-100">🏆 {t('partner.category')}</span>
+          )}
           <span className="block truncate text-sm text-slate-600 dark:text-slate-300">
             {sub?.name} · {TOWNS_BY_ID[b.townId]?.name}
           </span>

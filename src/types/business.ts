@@ -104,6 +104,13 @@ export interface Plot {
 /** Business as the map needs it: joined with live promo info. */
 export interface MapBusiness extends Business {
   activePromoCount: number;
+  /** Founding partner roles (assigned by an admin). */
+  partner: {
+    /** District Founding Partner of this district. */
+    district?: DistrictId;
+    /** Category Founding Partner of this subcategory. */
+    subcategory?: string;
+  };
 }
 
 /** Everything the business card needs. */
