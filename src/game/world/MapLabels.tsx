@@ -3,7 +3,7 @@
  * download). Which labels show depends on the zoom level so the map never
  * gets cluttered:
  *   island   → the 9 district names
- *   district → towns + landmarks of that district, neighbours' names faded
+ *   district → towns + landmarks of that district (businesses label themselves)
  *   town     → towns + landmarks of that district
  */
 import { Html } from '@react-three/drei';
@@ -43,14 +43,14 @@ export function MapLabels({ world }: { world: WorldData }) {
     );
   }
 
-  const towns = world.towns.filter((t) => t.districtId === districtId);
+  // In town view the business chips take over; keep only the other towns' names.
+  const towns = world.towns.filter((t) => t.districtId === districtId && !(level !== 'district' && t.id === townId));
   const landmarks = world.landmarks.filter((l) => l.districtId === districtId);
-  const others = level === 'district' ? world.districts.filter((d) => d.id !== districtId) : [];
 
   return (
     <>
       {towns.map((t) => (
-        <Html key={t.id} position={groundPoint(t.at, 0.35)} center zIndexRange={[20, 0]}>
+        <Html key={t.id} position={groundPoint(t.at, 1.4)} center zIndexRange={[20, 0]}>
           <button
             className={`${pill} min-h-10 ${
               t.id === townId
@@ -64,20 +64,10 @@ export function MapLabels({ world }: { world: WorldData }) {
         </Html>
       ))}
       {landmarks.map((l) => (
-        <Html key={l.id} position={groundPoint(l.at, l.kind === 'le-morne' ? 2.6 : 0.6)} center zIndexRange={[19, 0]}>
+        <Html key={l.id} position={groundPoint(l.at, l.kind === 'le-morne' ? 2.6 : 0.9)} center zIndexRange={[19, 0]}>
           <span className="pointer-events-none select-none whitespace-nowrap rounded-md bg-amber-100/90 px-2 py-0.5 text-xs font-medium text-amber-900 shadow dark:bg-amber-900/80 dark:text-amber-50">
             ★ {l.name}
           </span>
-        </Html>
-      ))}
-      {others.map((d) => (
-        <Html key={d.id} position={groundPoint(d.center, 0.6)} center zIndexRange={[18, 0]}>
-          <button
-            className={`${pill} bg-white/60 text-slate-600 dark:bg-slate-900/60 dark:text-slate-300`}
-            onClick={() => goDistrict(d.id)}
-          >
-            {d.name}
-          </button>
         </Html>
       ))}
     </>

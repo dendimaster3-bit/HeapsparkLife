@@ -2,27 +2,21 @@
  * The 3D scene. Mobile-first settings: capped pixel ratio (auto-lowered if
  * FPS drops), no shadows, cheap Lambert materials, instancing everywhere.
  */
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
 import type { WorldData } from '@/api';
 import { useUiStore } from '@/store/useUiStore';
 import { CameraRig } from './camera/CameraRig';
-import { Island } from './world/Island';
 import { Water } from './world/Water';
-import { Roads } from './world/Roads';
-import { Towns } from './world/Towns';
-import { Vegetation } from './world/Vegetation';
-import { Landmarks } from './world/landmarks';
+import { DistrictMap } from './world/DistrictMap';
+import { DistrictScene } from './world/DistrictScene';
 import { MapLabels } from './world/MapLabels';
 import { DayNightCycle } from './ambient/DayNightCycle';
-import { Traffic } from './ambient/Traffic';
 import { Boats } from './ambient/Boats';
 import { Plane } from './ambient/Plane';
 import { FpsProbe } from './FpsProbe';
 import { DebugHooks } from './DebugHooks';
-import { BusinessLayer } from './buildings/BusinessLayer';
-import { AdLayer } from './ads/AdLayer';
 
 export default function GameCanvas({ world, onReady }: { world: WorldData; onReady?: () => void }) {
   const [dpr, setDpr] = useState(Math.min(1.5, window.devicePixelRatio));
@@ -43,18 +37,10 @@ export default function GameCanvas({ world, onReady }: { world: WorldData; onRea
       <DayNightCycle />
       <CameraRig />
       <Water />
-      <Island />
-      <Roads />
-      <Towns towns={world.towns} />
-      <Vegetation />
-      <Suspense fallback={null}>
-        <Landmarks landmarks={world.landmarks} />
-      </Suspense>
-      <Traffic />
+      <DistrictMap />
+      <DistrictScene world={world} />
       <Boats />
       <Plane />
-      <BusinessLayer />
-      <AdLayer />
       <MapLabels world={world} />
       {debug && (
         <>

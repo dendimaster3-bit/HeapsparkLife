@@ -38,6 +38,8 @@ export interface BuildingVisual {
   pinned?: boolean;
   /** District Founding Partner: landmark-style building. */
   landmark?: boolean;
+  /** Emoji shown on a round sign floating above the roof (what the business is). */
+  emblem?: string;
 }
 
 /** Growth makes the whole building a little bigger. */
@@ -85,6 +87,44 @@ export function BuildingSimple(v: BuildingVisual) {
 
 const RING_GEO = new THREE.TorusGeometry(0.5, 0.03, 6, 40);
 
+const emblemCache = new Map<string, THREE.SpriteMaterial>();
+/** Round white badge with the business type's emoji and a brand-coloured rim. */
+function emblemMaterial(emoji: string, brand: string) {
+  const key = `${emoji}|${brand}`;
+  let m = emblemCache.get(key);
+  if (!m) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const g = c.getContext('2d')!;
+    g.fillStyle = brand;
+    g.beginPath();
+    g.arc(64, 64, 62, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    g.arc(64, 64, 52, 0, Math.PI * 2);
+    g.fill();
+    g.font = '64px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(emoji, 64, 70);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    m = new THREE.SpriteMaterial({ map: t, toneMapped: false });
+    emblemCache.set(key, m);
+  }
+  return m;
+}
+
+/** Floating "what is this place" badge that always faces the camera. */
+function Emblem({ emoji, brand, y }: { emoji: string; brand: string; y: number }) {
+  const ref = useRef<THREE.Sprite>(null);
+  useFrame(({ clock }) => {
+    if (ref.current) ref.current.position.y = y + Math.sin(clock.elapsedTime * 1.6) * 0.12;
+  });
+  return <sprite ref={ref} material={emblemMaterial(emoji, brand)} position-y={y} scale={1.7} />;
+}
+
 /** Pulsing ring under the selected building. */
 function SelectionRing({ brand, radius }: { brand: string; radius: number }) {
   const ref = useRef<THREE.Mesh>(null);
@@ -101,7 +141,7 @@ function SelectionRing({ brand, radius }: { brand: string; radius: number }) {
  * nothing far away. The promo beam stays visible at every range.
  * `lodDistances` are in world units (km).
  */
-export function Building({ lodDistances = [0, 9, 30], ...v }: BuildingVisual & { lodDistances?: [number, number, number] }) {
+export function Building({ lodDistances = [0, 17, 45], ...v }: BuildingVisual & { lodDistances?: [number, number, number] }) {
   const { spec } = useBuildingSpec(v);
   const scale = GROWTH_SCALE[v.level];
   return (
@@ -111,6 +151,7 @@ export function Building({ lodDistances = [0, 9, 30], ...v }: BuildingVisual & {
         <BuildingSimple {...v} />
         <group />
       </Detailed>
+      {v.emblem && <Emblem emoji={v.emblem} brand={v.brand} y={spec.top * scale + 1.9} />}
       {v.promo && <PromoBeam from={spec.top * scale + 0.3} />}
       {v.pinned && !v.selected && <SearchPin y={spec.top * scale + 1} color={v.brand} />}
       {v.selected && <SelectionRing brand={v.brand} radius={Math.max(spec.w, spec.d) * 2.4} />}

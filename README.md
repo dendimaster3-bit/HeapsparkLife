@@ -28,6 +28,14 @@ Pages: `/` the game · `/business` business portal · `/admin` admin panel · `/
 
 Copy `.env.example` to `.env` to change the data adapter (`VITE_API`) or serve from a sub-path (`VITE_BASE=/life/`).
 
+## The world: district map → open a district
+
+- **Island view** is a clean district map: one pastel tile per district with white borders, a turquoise lagoon, beaches and the reef. The outlines are traced from a reference district map by `scripts/trace-districts.py` (Pillow + numpy) into `src/data/districtShapes.ts`; re-run it with a new image to adjust borders:
+  `python3 scripts/trace-districts.py assets/districts-map.png`
+- **Tap a district** (tile, label or chip) and it *opens*: its tile turns into city ground and the district grows up out of the board — lavender roads with dashed centre lines, town streets, pastel apartment towers and houses, lollipop trees, sugar-cane fields, mountains, rivers, cars driving on the left, landmarks, billboards, the founding-partner gateway, business buildings and free plots. Panning stays inside the open district; the back button or zooming far out returns to the map.
+- **Only one district is detailed at a time**, which keeps phones fast (roughly 35–100 draw calls per district).
+- **Every business is its own themed building** (car wash bay with brushes, bakery with chimney and baguette sign, pharmacy cross…) with a floating round badge showing its type (🧽 🥖 💊 …) so it's recognisable from afar. Zoom into a town to see name chips; tap a building for its card.
+
 ## Extending the map
 
 All map content is data. Coordinates are approximate real latitude/longitude, so you can look new places up on any map.
@@ -36,9 +44,10 @@ All map content is data. Coordinates are approximate real latitude/longitude, so
 |---|---|
 | A town or locality | `src/data/towns.ts` (one row) |
 | A road | `src/data/roads.ts` (a list of lat/lon points) |
-| A hill or mountain | `PEAKS` in `src/data/terrain.ts` |
+| A mountain | `PEAKS` in `src/data/terrain.ts` (shown as a low-poly mountain in its district) |
 | A landmark | a row in `src/data/landmarks.ts` + a component in `src/game/world/landmarks/` registered in `index.tsx` |
-| A district boundary tweak | move or add `seeds` in `src/data/districts.ts` |
+| District borders | re-trace from an image with `scripts/trace-districts.py` (or edit `src/data/districtShapes.ts`) |
+| A river | `RIVERS` in `src/data/terrain.ts` |
 | A translation | `src/i18n/locales/{en,fr,mfe}.ts` |
 
 ## Building kit
@@ -57,7 +66,7 @@ A building = **base shape** (kiosk, shop, two-storey, large venue) + **signature
 
 **Adding a brand-new look:** write a prop component in `src/game/buildings/props/` (it receives the base dimensions, brand colour and materials), then add one entry to `BUILDING_STYLES` in `src/game/buildings/registry.ts`.
 
-Plots are generated along the streets of every town (`src/game/world/plots.ts`, ids `<townId>-<n>`). Demo businesses live in `src/data/demoBusinesses.ts` and are all flagged `isDemo`.
+Plots are generated along the streets of every town, inside its district (`src/game/world/plots.ts`, ids `<townId>-<n>`). Demo businesses live in `src/data/demoBusinesses.ts` and are all flagged `isDemo`.
 
 ## Business cards, search and tracking
 

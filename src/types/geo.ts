@@ -26,18 +26,12 @@ export type DistrictId =
 export interface District {
   id: DistrictId;
   name: string;
-  /** Accent colour used for terrain tint, roofs, labels and UI chips. */
+  /** Accent colour used for the map tile, roofs, labels and UI chips. */
   color: string;
-  /**
-   * Seed points that "own" the land around them. A point on the island
-   * belongs to the district with the nearest (weighted) seed, which gives
-   * stylised, readable zones without hand-drawn polygons.
-   */
-  seeds: { at: LatLon; weight?: number }[];
-  /** Where the label sits and the camera looks when zooming into the district. */
+  /** Outline (lat/lon, closed). Neighbouring districts share edges. */
+  shape: LatLon[];
+  /** Where the label sits. */
   center: LatLon;
-  /** Camera distance (km) when focused on this district. */
-  zoomDistance: number;
   /** i18n key for the short intro shown on the district loading card. */
   blurbKey: string;
 }
@@ -72,7 +66,7 @@ export interface Landmark {
   rotation?: number;
 }
 
-export type RoadKind = 'motorway' | 'main' | 'coastal';
+export type RoadKind = 'motorway' | 'main' | 'coastal' | 'street';
 
 export interface Road {
   id: string;

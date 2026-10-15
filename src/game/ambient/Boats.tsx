@@ -9,7 +9,7 @@ const COUNT = 22;
 
 export function Boats() {
   const path = useMemo(
-    () => makeGroundPath(offsetPolygon(COAST, 1.3), { loop: true, spacing: 0.3, lift: 0, heightFn: () => 0 }),
+    () => makeGroundPath(offsetPolygon(COAST, 0.9), { loop: true, spacing: 0.3, lift: 0, heightFn: () => 0 }),
     [],
   );
   const boats = useMemo(() => {

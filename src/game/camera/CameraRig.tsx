@@ -9,7 +9,7 @@ import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useCameraStore, type CameraTarget } from '@/store/useCameraStore';
 import { useUiStore } from '@/store/useUiStore';
-import { ISLAND_BOUNDS, districtAt, project, signedDistance } from '@/lib/geo';
+import { DISTRICT_BOUNDS, ISLAND_BOUNDS, districtAt, project, signedDistance } from '@/lib/geo';
 import { TOWNS } from '@/data/towns';
 
 const { ACTION } = CameraControlsImpl;
@@ -34,8 +34,8 @@ export function CameraRig() {
   useEffect(() => {
     const c = controls.current;
     if (!c) return;
-    c.minDistance = 0.5;
-    c.maxDistance = 180;
+    c.minDistance = 0.8;
+    c.maxDistance = 150;
     c.minPolarAngle = 0.1;
     c.maxPolarAngle = 1.2; // never look from below the horizon
     c.smoothTime = 0.45;
@@ -48,8 +48,7 @@ export function CameraRig() {
     c.touches.one = ACTION.TOUCH_SCREEN_PAN;
     c.touches.two = ACTION.TOUCH_DOLLY_ROTATE;
     c.touches.three = ACTION.TOUCH_ROTATE;
-    const { minX, maxX, minZ, maxZ } = ISLAND_BOUNDS;
-    c.setBoundary(new THREE.Box3(new THREE.Vector3(minX - 6, -1, minZ - 6), new THREE.Vector3(maxX + 6, 4, maxZ + 6)));
+    setIslandBoundary(c);
     // Start far out; the intro "fly-in" happens once the player taps Start.
     applyTarget(c, { look: [0, 0, 0], distance: 170, polar: 0.35 }, false);
 
@@ -64,6 +63,16 @@ export function CameraRig() {
     c.addEventListener('rest', onRest);
     return () => c.removeEventListener('rest', onRest);
   }, []);
+
+  // Panning stays inside the open district (or around the island on the map).
+  const districtId = useCameraStore((s) => s.districtId);
+  useEffect(() => {
+    const c = controls.current;
+    if (!c) return;
+    if (!districtId) return setIslandBoundary(c);
+    const b = DISTRICT_BOUNDS[districtId];
+    c.setBoundary(new THREE.Box3(new THREE.Vector3(b.minX - 1, -1, b.minZ - 1), new THREE.Vector3(b.maxX + 1, 4, b.maxZ + 1)));
+  }, [districtId]);
 
   // Fly to the requested target (and do the intro fly-in).
   const getThree = useThree((s) => s.get);
@@ -92,6 +101,11 @@ export function CameraRig() {
   }, [requestId, introDone, getThree]);
 
   return <CameraControls ref={controls} makeDefault />;
+}
+
+function setIslandBoundary(c: CameraControlsImpl) {
+  const { minX, maxX, minZ, maxZ } = ISLAND_BOUNDS;
+  c.setBoundary(new THREE.Box3(new THREE.Vector3(minX - 6, -1, minZ - 6), new THREE.Vector3(maxX + 6, 4, maxZ + 6)));
 }
 
 /** Move to a target keeping the current compass heading (azimuth). */

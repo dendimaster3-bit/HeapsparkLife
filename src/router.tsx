@@ -5,6 +5,7 @@
 import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import GamePage from '@/ui/GamePage';
+import ErrorScreen from '@/ui/common/ErrorScreen';
 
 const KitGallery = lazy(() => import('@/portals/KitGallery'));
 const BusinessHome = lazy(() => import('@/portals/business/BusinessHome'));
@@ -16,6 +17,9 @@ const LegalPage = lazy(() => import('@/ui/legal/LegalPage'));
 
 export const router = createBrowserRouter(
   [
+    {
+      errorElement: <ErrorScreen />,
+      children: [
     { path: '/', element: <GamePage /> },
     { path: '/kit', element: <KitGallery /> },
     { path: '/business', element: <BusinessHome /> },
@@ -26,6 +30,8 @@ export const router = createBrowserRouter(
     { path: '/terms', element: <LegalPage doc="terms" /> },
     { path: '/admin', element: <AdminPage /> },
     { path: '*', element: <GamePage /> },
+      ],
+    },
   ],
   { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' },
 );

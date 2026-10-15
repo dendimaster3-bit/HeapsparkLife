@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import type { ThreeElements } from '@react-three/fiber';
 import type { BaseShape } from '@/types/business';
 
-export const KIT_SCALE = 0.085;
+export const KIT_SCALE = 0.155;
 
 // ---------------------------------------------------------------------------
 // Shared geometries (unit-sized; scale them per mesh)

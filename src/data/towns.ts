@@ -25,8 +25,8 @@ export const TOWNS: Town[] = [
 
   // Flacq
   { id: 'centre-de-flacq', districtId: 'flacq', name: 'Centre de Flacq', at: [-20.189, 57.718], kind: 'town' },
-  { id: 'belle-mare', districtId: 'flacq', name: 'Belle Mare', at: [-20.19, 57.76], kind: 'village' },
-  { id: 'trou-d-eau-douce', districtId: 'flacq', name: "Trou d'Eau Douce", at: [-20.24, 57.78], kind: 'village' },
+  { id: 'belle-mare', districtId: 'flacq', name: 'Belle Mare', at: [-20.196, 57.748], kind: 'village' },
+  { id: 'trou-d-eau-douce', districtId: 'flacq', name: "Trou d'Eau Douce", at: [-20.24, 57.763], kind: 'village' },
   { id: 'lalmatie', districtId: 'flacq', name: 'Lalmatie', at: [-20.19, 57.66], kind: 'village' },
   { id: 'bel-air', districtId: 'flacq', name: 'Bel Air Rivière Sèche', at: [-20.256, 57.745], kind: 'village' },
 
@@ -43,7 +43,7 @@ export const TOWNS: Town[] = [
   { id: 'ebene', districtId: 'plaines-wilhems', name: 'Ebène', at: [-20.244, 57.49], kind: 'town' },
 
   // Grand Port
-  { id: 'mahebourg', districtId: 'grand-port', name: 'Mahébourg', at: [-20.408, 57.7], kind: 'town' },
+  { id: 'mahebourg', districtId: 'grand-port', name: 'Mahébourg', at: [-20.403, 57.688], kind: 'town' },
   { id: 'rose-belle', districtId: 'grand-port', name: 'Rose-Belle', at: [-20.4, 57.597], kind: 'town' },
   { id: 'plaine-magnien', districtId: 'grand-port', name: 'Plaine Magnien', at: [-20.425, 57.655], kind: 'village' },
   { id: 'vieux-grand-port', districtId: 'grand-port', name: 'Vieux Grand Port', at: [-20.37, 57.72], kind: 'village' },

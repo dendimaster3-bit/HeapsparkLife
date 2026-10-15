@@ -5,20 +5,20 @@
  * them. Later the admin/claim flow can add hand-placed plots too.
  */
 import { TOWNS } from '@/data/towns';
-import { project, rng, hashString } from '@/lib/geo';
+import { insideDistrict, project, rng, hashString } from '@/lib/geo';
 import type { Plot } from '@/types/business';
 import type { TownKind } from '@/types/geo';
+import { TOWN_RADIUS } from './roadNetwork';
 import { getRoadNetwork } from './roadNetwork';
 import { isBuildable } from './placement';
 
 export const PLOTS_PER_TOWN: Record<TownKind, number> = { city: 6, town: 5, village: 3 };
-const TOWN_RADIUS: Record<TownKind, number> = { city: 1.4, town: 0.9, village: 0.6 };
 /** Distance from road centre-line to plot centre (km). */
-const SETBACK = 0.28;
+const SETBACK = 0.5;
 /** Minimum distance between plots (km). */
-const SPACING = 0.5;
+const SPACING = 1.1;
 /** Clearance radius a plot needs. */
-export const PLOT_RADIUS = 0.2;
+export const PLOT_RADIUS = 0.38;
 
 type Unplaced = Omit<Plot, 'businessId'>;
 let cache: Unplaced[] | null = null;
@@ -33,10 +33,12 @@ export function getAllPlots(): Unplaced[] {
     const want = PLOTS_PER_TOWN[town.kind];
     const radius = TOWN_RADIUS[town.kind];
     const placed: Unplaced[] = [];
-    const ok = (x: number, z: number) =>
-      isBuildable(x, z, PLOT_RADIUS) &&
-      placed.every((p) => Math.hypot(p.position[0] - x, p.position[1] - z) >= SPACING) &&
-      out.every((p) => Math.hypot(p.position[0] - x, p.position[1] - z) >= SPACING);
+    // `relax` loosens spacing for crowded places (small Port Louis, coastal towns).
+    const ok = (x: number, z: number, relax = 1) =>
+      isBuildable(x, z, PLOT_RADIUS * relax, (SETBACK - 0.06) * relax) &&
+      insideDistrict(x, z, town.districtId, (PLOT_RADIUS + 0.1) * relax) &&
+      placed.every((p) => Math.hypot(p.position[0] - x, p.position[1] - z) >= SPACING * relax) &&
+      out.every((p) => Math.hypot(p.position[0] - x, p.position[1] - z) >= SPACING * relax);
     const add = (x: number, z: number, rotation: number) =>
       placed.push({ id: `${town.id}-${placed.length}`, townId: town.id, districtId: town.districtId, position: [x, z], rotation });
 
@@ -62,13 +64,16 @@ export function getAllPlots(): Unplaced[] {
       }
     }
 
-    // 2) Fallback for towns off the main roads: a ring facing the centre.
+    // 2) Fallback for towns off the main roads: spots facing the centre,
+    //    first at normal spacing, then a little tighter if still short.
     const rand = rng(hashString(`plots:${town.id}`));
-    for (let tries = 0; placed.length < want && tries < 200; tries++) {
-      const a = rand() * Math.PI * 2;
-      const r = (0.25 + rand() * 0.75) * radius;
-      const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
-      if (ok(x, z)) add(x, z, Math.atan2(cx - x, cz - z));
+    for (const [relax, reach] of [[1, 1.3], [0.85, 1.5]] as const) {
+      for (let tries = 0; placed.length < want && tries < 500; tries++) {
+        const a = rand() * Math.PI * 2;
+        const r = (0.2 + rand() * (reach - 0.2)) * radius;
+        const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
+        if (ok(x, z, relax)) add(x, z, Math.atan2(cx - x, cz - z));
+      }
     }
     out.push(...placed);
   }

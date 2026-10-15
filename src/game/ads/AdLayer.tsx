@@ -25,6 +25,8 @@ import { districtEntrances, resolveSpot } from './placement';
 const POST = lambert('#475569');
 const FRAME = lambert('#e2e8f0');
 const isTap = (e: ThreeEvent<MouseEvent>) => e.delta < 8;
+/** Ads are drawn bigger in the toy-city scale. */
+const AD_SCALE = 1.25;
 
 /** A creative panel visible from both sides. */
 function Panel({ w, h, texture, onTap }: { w: number; h: number; texture: THREE.Texture; onTap: () => void }) {
@@ -55,7 +57,7 @@ function Billboard({ p, w = 0.56, h = 0.28, legs = 0.2 }: { p: AdPlacement; w?: 
   const click = useAdsStore((s) => s.click);
   if (!spot) return null;
   return (
-    <group position={spot.position} rotation-y={spot.rotation} name={`ad-${p.slot.id}`}>
+    <group position={spot.position} rotation-y={spot.rotation} scale={AD_SCALE} name={`ad-${p.slot.id}`}>
       {[-w * 0.3, w * 0.3].map((x) => (
         <mesh key={x} geometry={GEO.box} material={POST} position={[x, legs / 2, 0]} scale={[0.02, legs + 0.05, 0.02]} />
       ))}
@@ -73,13 +75,13 @@ function TownEntrance({ p }: { p: AdPlacement }) {
 
 /** Small bus shelter with a poster on the side. */
 function BusStop({ p }: { p: AdPlacement }) {
-  const spot = useMemo(() => resolveSpot(p.slot.placement, 0.45, 0.17), [p.slot.placement]);
+  const spot = useMemo(() => resolveSpot(p.slot.placement, 0.45, 0.3), [p.slot.placement]);
   const empty = useEmptyLabels();
   const tex = creativeTexture(p.booking?.creative ?? null, 0.75, empty.label, empty.sub);
   const click = useAdsStore((s) => s.click);
   if (!spot) return null;
   return (
-    <group position={spot.position} rotation-y={spot.rotation} name={`ad-${p.slot.id}`}>
+    <group position={spot.position} rotation-y={spot.rotation} scale={AD_SCALE} name={`ad-${p.slot.id}`}>
       <mesh geometry={GEO.box} material={lambert('#0ea5b7')} position={[0, 0.09, 0]} scale={[0.16, 0.012, 0.07]} />
       {[-0.07, 0.07].map((x) => (
         <mesh key={x} geometry={GEO.box} material={POST} position={[x, 0.045, -0.03]} scale={[0.008, 0.09, 0.008]} />
@@ -118,7 +120,7 @@ function DistrictGate({ district }: { district: District }) {
     else window.open(ADVERTISE_URL, '_blank', 'noopener');
   };
   return (
-    <group position={spot.position} rotation-y={angle} name={`gate-${district.id}`}>
+    <group position={spot.position} rotation-y={angle} scale={AD_SCALE} name={`gate-${district.id}`}>
       {[-span / 2, span / 2].map((x) => (
         <group key={x} position-x={x}>
           <mesh geometry={GEO.box} material={partner ? GOLD : FRAME} position-y={0.2} scale={[0.05, 0.4, 0.05]} />

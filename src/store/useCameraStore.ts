@@ -4,9 +4,8 @@
  */
 import { create } from 'zustand';
 import type { DistrictId, ZoomLevel } from '@/types/geo';
-import { DISTRICTS_BY_ID } from '@/data/districts';
-import { TOWNS_BY_ID } from '@/data/towns';
-import { ISLAND_BOUNDS, groundPoint } from '@/lib/geo';
+import { TOWNS, TOWNS_BY_ID } from '@/data/towns';
+import { BOARD_TOP, DISTRICT_BOUNDS, ISLAND_BOUNDS, groundPoint } from '@/lib/geo';
 
 export interface CameraTarget {
   /** Point the camera looks at. */
@@ -20,16 +19,31 @@ export interface CameraTarget {
 }
 
 /** Island overview: whole island in frame, slightly tilted. */
+/** Island overview: the district map seen almost from above (like a paper map). */
 export const ISLAND_VIEW: CameraTarget = {
-  look: [(ISLAND_BOUNDS.minX + ISLAND_BOUNDS.maxX) / 2, 0, (ISLAND_BOUNDS.minZ + ISLAND_BOUNDS.maxZ) / 2 + 3],
-  distance: 95,
-  polar: 0.62,
+  look: [(ISLAND_BOUNDS.minX + ISLAND_BOUNDS.maxX) / 2, 0, (ISLAND_BOUNDS.minZ + ISLAND_BOUNDS.maxZ) / 2 + 5],
+  distance: 78,
+  polar: 0.22,
+  azimuth: 0,
 };
-const TOWN_DISTANCE = 4.5;
-const BUSINESS_DISTANCE = 1.7;
+
+const KIND_RANK = { city: 0, town: 1, village: 2 } as const;
+
+/**
+ * Camera framing for an opened district: a tilted "toy city" view centred
+ * on its main town (the player pans to see the rest).
+ */
+export function districtView(id: DistrictId): CameraTarget {
+  const main = [...TOWNS].filter((t) => t.districtId === id).sort((a, b) => KIND_RANK[a.kind] - KIND_RANK[b.kind])[0];
+  const b = DISTRICT_BOUNDS[id];
+  const look = main ? groundPoint(main.at) : ([(b.minX + b.maxX) / 2, BOARD_TOP, (b.minZ + b.maxZ) / 2] as [number, number, number]);
+  return { look, distance: 11, polar: 0.85 };
+}
+const TOWN_DISTANCE = 5;
+const BUSINESS_DISTANCE = 2.4;
 
 /** Distances where manual zooming switches levels. */
-export const LEVEL_THRESHOLDS = { island: 45, district: 12, town: 3.5 } as const;
+export const LEVEL_THRESHOLDS = { island: 45, district: 7.5, town: 3.8 } as const;
 
 interface CameraState {
   level: ZoomLevel;
@@ -64,13 +78,12 @@ export const useCameraStore = create<CameraState>((set, get) => ({
     set((s) => ({ level: 'island', districtId: null, townId: null, businessId: null, target: ISLAND_VIEW, requestId: s.requestId + 1 })),
 
   goDistrict: (id) => {
-    const d = DISTRICTS_BY_ID[id];
     set((s) => ({
       level: 'district',
       districtId: id,
       townId: null,
       businessId: null,
-      target: { look: groundPoint(d.center), distance: d.zoomDistance, polar: 0.75 },
+      target: districtView(id),
       requestId: s.requestId + 1,
     }));
   },
@@ -83,7 +96,7 @@ export const useCameraStore = create<CameraState>((set, get) => ({
       districtId: t.districtId,
       townId: id,
       businessId: null,
-      target: { look: groundPoint(t.at), distance: TOWN_DISTANCE, polar: 0.9 },
+      target: { look: groundPoint(t.at), distance: TOWN_DISTANCE, polar: 0.92 },
       requestId: s.requestId + 1,
     }));
   },
@@ -116,7 +129,9 @@ export const useCameraStore = create<CameraState>((set, get) => ({
     else if (distance > LEVEL_THRESHOLDS.district) next = 'district';
     else if (level !== 'business' || distance > LEVEL_THRESHOLDS.town) next = 'town';
 
-    const nextDistrict = next === 'island' ? null : under ?? districtId;
+    // While a district is open it stays open (panning is limited to it);
+    // only zooming far out returns to the island map.
+    const nextDistrict = next === 'island' ? null : districtId ?? under;
     const nextTown = next === 'town' || next === 'business' ? nearTown ?? townId : null;
     const nextBusiness = next === 'business' ? businessId : null;
     if (next !== level || nextDistrict !== districtId || nextTown !== townId || nextBusiness !== businessId) {

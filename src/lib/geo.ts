@@ -1,11 +1,12 @@
 /**
- * World geometry helpers shared by the terrain mesh and everything placed
- * on it (roads, houses, labels, buildings). Everything is deterministic so
- * the same lat/lon always lands at the same spot and height.
+ * World geometry helpers shared by the map and everything placed on it
+ * (roads, houses, labels, buildings). The island is a flat board; districts
+ * are traced polygons. Everything is deterministic so the same lat/lon
+ * always lands at the same spot.
  *
  * World units: 1 unit ≈ 1 km. +x = east, +z = south (so north is -z).
  */
-import { COASTLINE, FLAT_ZONES, LAKES, PEAKS } from '@/data/terrain';
+import { COASTLINE, LAKES } from '@/data/terrain';
 import { DISTRICTS } from '@/data/districts';
 import type { DistrictId, LatLon, Vec2 } from '@/types/geo';
 
@@ -133,92 +134,68 @@ export function valueNoise(x: number, z: number) {
   return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
 }
 
-const smoothstep = (e0: number, e1: number, x: number) => {
-  const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0)));
-  return t * t * (3 - 2 * t);
-};
-
 // ---------------------------------------------------------------------------
-// Terrain height
+// The board: the island is a flat, slightly raised "game board"
 // ---------------------------------------------------------------------------
 
-const PEAKS_W = PEAKS.map((p) => ({ ...p, pos: project(p.at) }));
 export const LAKES_W = LAKES.map((l) => ({ ...l, pos: project(l.at) }));
 
 /** Height of the sea surface. */
 export const SEA_LEVEL = 0;
+/** Height of the island's top surface (everything stands on it). */
+export const BOARD_TOP = 0.08;
 /** Distance (km) from the shore to the barrier reef / lagoon edge. */
-export const REEF_DISTANCE = 2.2;
+export const REEF_DISTANCE = 1.6;
 
-/** Terrain height (world units) at a ground position. */
+/** Ground height at a position: the board top on land, sea level offshore. */
 export function heightAt(x: number, z: number): number {
-  let h = rawHeight(x, z);
-  for (const f of FLAT_W) {
-    const r = Math.hypot(x - f.pos[0], z - f.pos[1]);
-    if (r < f.radius) h = f.h + (h - f.h) * smoothstep(f.radius * 0.7, f.radius, r);
-  }
-  return h;
+  return pointInPolygon(x, z, COAST) ? BOARD_TOP : SEA_LEVEL;
 }
 
-function rawHeight(x: number, z: number): number {
-  const d = signedDistance(x, z);
-  if (d < 0) {
-    // Shallow lagoon shelf out to the reef, then a drop-off to deep water.
-    if (d > -REEF_DISTANCE) return -0.08 + d * 0.12;
-    return Math.max(-3, -0.08 - REEF_DISTANCE * 0.12 + (d + REEF_DISTANCE) * 1.5);
-  }
+// ---------------------------------------------------------------------------
+// Districts (traced outlines; neighbours share edges)
+// ---------------------------------------------------------------------------
 
-  const inland = smoothstep(0, 1.5, d);
-  let h = 0.04 + inland * 0.2;
-  h += (valueNoise(x * 0.35, z * 0.35) - 0.5) * 0.5 * inland;
-  for (const p of PEAKS_W) {
-    const dx = x - p.pos[0], dz = z - p.pos[1];
-    const s = p.radius * 0.5;
-    h += p.height * Math.exp(-(dx * dx + dz * dz) / (2 * s * s)) * inland;
-  }
-  // Flatten lakes into shallow basins.
-  for (const l of LAKES_W) {
-    const r = Math.hypot(x - l.pos[0], z - l.pos[1]);
-    if (r < l.radius * 1.6) {
-      const t = smoothstep(l.radius * 0.6, l.radius * 1.6, r);
-      h = h * t + (h - 0.25) * (1 - t);
-    }
-  }
-  return Math.max(0.03, h);
+export const DISTRICT_POLYS = Object.fromEntries(DISTRICTS.map((d) => [d.id, d.shape.map(project)])) as Record<DistrictId, Vec2[]>;
+
+export interface Bounds {
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
 }
 
-const FLAT_W = FLAT_ZONES.map((f) => {
-  const pos = project(f.at);
-  return { ...f, pos, h: rawHeight(pos[0], pos[1]) };
-});
+function boundsOf(poly: readonly Vec2[]): Bounds {
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+  for (const [x, z] of poly) {
+    minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+    minZ = Math.min(minZ, z); maxZ = Math.max(maxZ, z);
+  }
+  return { minX, maxX, minZ, maxZ };
+}
 
-// ---------------------------------------------------------------------------
-// Districts
-// ---------------------------------------------------------------------------
+export const DISTRICT_BOUNDS = Object.fromEntries(
+  Object.entries(DISTRICT_POLYS).map(([id, poly]) => [id, boundsOf(poly)]),
+) as Record<DistrictId, Bounds>;
 
-const SEEDS_W = DISTRICTS.flatMap((d) =>
-  d.seeds.map((s) => ({ id: d.id, pos: project(s.at), weight: s.weight ?? 1 })),
-);
-
-/**
- * Which district owns a ground position, plus a 0..1 "edge" factor that
- * is 1 right on a border (used to draw soft boundary lines).
- */
+/** Which district a ground position is in (nearest one if it's just offshore). */
 export function districtAt(x: number, z: number): { id: DistrictId; edge: number } {
-  let best = Infinity, second = Infinity;
-  let bestId: DistrictId = SEEDS_W[0].id;
-  for (const s of SEEDS_W) {
-    const dist = Math.hypot(x - s.pos[0], z - s.pos[1]) / s.weight;
-    if (dist < best) {
-      if (s.id !== bestId) second = best;
-      best = dist;
-      bestId = s.id;
-    } else if (dist < second && s.id !== bestId) {
-      second = dist;
+  let nearest: DistrictId = DISTRICTS[0].id;
+  let best = Infinity;
+  for (const d of DISTRICTS) {
+    const sd = signedDistance(x, z, DISTRICT_POLYS[d.id]);
+    if (sd >= 0) return { id: d.id, edge: Math.max(0, 1 - sd / 0.3) };
+    if (-sd < best) {
+      best = -sd;
+      nearest = d.id;
     }
   }
-  const edge = 1 - smoothstep(0, 0.6, second - best);
-  return { id: bestId, edge };
+  return { id: nearest, edge: 1 };
+}
+
+/** Is a point inside a district, at least `margin` km from its border? */
+export function insideDistrict(x: number, z: number, id: DistrictId, margin = 0): boolean {
+  return signedDistance(x, z, DISTRICT_POLYS[id]) >= margin;
 }
 
 /** Convenience: lat/lon → 3D position on the ground. */
