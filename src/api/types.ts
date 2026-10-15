@@ -13,10 +13,10 @@ import type {
   SearchParams,
   Subcategory,
 } from '@/types/business';
-import type { ContactKind, Session } from '@/types/player';
+import type { Award, ContactKind, Progress, Session } from '@/types/player';
 import type { LookupResult, RedemptionMethod, UnlockError, WalletItem } from '@/types/promo';
 
-export type UnlockResult = { ok: true; item: WalletItem; already: boolean } | { ok: false; error: UnlockError };
+export type UnlockResult = { ok: true; item: WalletItem; already: boolean; awards: Award[] } | { ok: false; error: UnlockError };
 
 export interface WorldData {
   districts: District[];
@@ -68,6 +68,14 @@ export interface HeapsparkApi {
     lookup(businessId: string, code: string): Promise<LookupResult>;
     /** Mark a code as used. Single-use: a second call fails with already-redeemed. */
     redeem(businessId: string, code: string, method: RedemptionMethod): Promise<LookupResult>;
+  };
+  progress: {
+    /** Points, ledger, passport stamps and badges (player, or local guest). */
+    get(): Promise<Progress>;
+    /** Daily-visit points (once per Mauritius day). */
+    dailyVisit(): Promise<Award[]>;
+    /** Stamp the passport + points the first time a district is explored. */
+    visitDistrict(districtId: DistrictId): Promise<Award[]>;
   };
   events: {
     /** Fire-and-forget interaction tracking (views, card opens, clicks). */

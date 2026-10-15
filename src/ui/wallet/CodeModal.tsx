@@ -2,7 +2,9 @@
 import { intlLocale, useT } from '@/i18n';
 import { useSessionStore } from '@/store/useSessionStore';
 import { useUiStore } from '@/store/useUiStore';
-import { codeState, validationUrl } from '@/lib/promo';
+import { codeState, discountBadge, validationUrl } from '@/lib/promo';
+import { gameUrl } from '@/lib/shareCard';
+import { useShareStore } from '@/store/useShareStore';
 import { Sheet } from '../common/Sheet';
 import { QrCode } from './QrCode';
 
@@ -13,6 +15,7 @@ export function CodeModal() {
   const justUnlocked = useSessionStore((s) => s.shownCode && Date.now() - Date.parse(s.shownCode.code.unlockedAt) < 15_000);
   const showCode = useSessionStore((s) => s.showCode);
   const setWalletOpen = useSessionStore((s) => s.setWalletOpen);
+  const openShare = useShareStore((s) => s.open);
   if (!item) return null;
   const { code, promo, businessName, brandColor } = item;
   const state = codeState(code);
@@ -40,15 +43,33 @@ export function CodeModal() {
             <p className="text-xs text-slate-500 dark:text-slate-400">{t('code.single')} · {t('code.brightness')}</p>
           </>
         )}
-        <button
-          className="min-h-12 w-full rounded-full bg-slate-100 font-bold dark:bg-slate-800"
-          onClick={() => {
-            showCode(null);
-            setWalletOpen(true);
-          }}
-        >
-          🎟️ {t('wallet.title')}
-        </button>
+        <div className="flex gap-2">
+          <button
+            className="min-h-12 flex-1 rounded-full bg-slate-100 font-bold dark:bg-slate-800"
+            onClick={() => {
+              showCode(null);
+              setWalletOpen(true);
+            }}
+          >
+            🎟️ {t('wallet.title')}
+          </button>
+          <button
+            className="min-h-12 flex-1 rounded-full bg-spark-500 font-bold text-white"
+            onClick={() => {
+              // Share the deal, never the personal code.
+              const deal = promo.discountType === 'freebie' ? promo.title.toLowerCase() : t('share.dealOff', { x: discountBadge(promo).replace('-', '') });
+              const text = t('share.promo', { deal, name: businessName });
+              openShare({
+                card: { headline: text, sub: t('share.promoSub'), emoji: '🎉', accent: brandColor },
+                text,
+                url: gameUrl(promo.businessId),
+                businessId: promo.businessId,
+              });
+            }}
+          >
+            📤 {t('share.button')}
+          </button>
+        </div>
       </div>
     </Sheet>
   );

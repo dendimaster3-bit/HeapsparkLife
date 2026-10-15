@@ -128,7 +128,7 @@ export interface SearchParams {
  * Anonymous interaction events powering business + admin stats. No
  * personal data: just what happened, to which business, and when.
  */
-export type AnalyticsEventType = 'view' | 'cardOpen' | 'call' | 'whatsapp' | 'website' | 'adClick';
+export type AnalyticsEventType = 'view' | 'cardOpen' | 'call' | 'whatsapp' | 'website' | 'share' | 'adClick';
 
 export interface AnalyticsEvent {
   type: AnalyticsEventType;

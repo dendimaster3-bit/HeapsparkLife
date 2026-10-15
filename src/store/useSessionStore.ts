@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { api } from '@/api';
 import type { Session } from '@/types/player';
 import type { WalletItem } from '@/types/promo';
+import { useProgressStore } from './useProgressStore';
 
 interface SessionState {
   session: Session | null;
@@ -53,15 +54,19 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const pending = get().pending;
     set({ session, authOpen: false, pending: null });
     void get().refreshWallet();
+    // Guest progress was merged into the account: show the account's totals.
+    void useProgressStore.getState().catchUp();
     pending?.();
   },
   signOut: async () => {
     await api.auth.signOut();
     set({ session: null, wallet: [], walletOpen: false, shownCode: null });
+    void useProgressStore.getState().refresh();
   },
   deleteAccount: async () => {
     await api.auth.deleteAccount();
     set({ session: null, wallet: [], walletOpen: false, shownCode: null });
+    void useProgressStore.getState().refresh();
   },
   refreshWallet: async () => set({ wallet: await api.promos.wallet() }),
   setWalletOpen: (walletOpen) => {

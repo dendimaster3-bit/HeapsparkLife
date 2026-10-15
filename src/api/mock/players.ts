@@ -5,6 +5,7 @@ import type { ContactKind, Session } from '@/types/player';
 import type { LookupResult, PromoCode, RedemptionMethod, WalletItem } from '@/types/promo';
 import type { HeapsparkApi, UnlockResult } from '../types';
 import { currentPlayer, db, save, uid } from './db';
+import { awardFor, eraseProgress, mergeGuestInto } from './progress';
 
 const DAY = 86_400_000;
 
@@ -63,6 +64,8 @@ export const authApi: HeapsparkApi['auth'] = {
     }
     d.otp = null;
     d.sessionPlayerId = player.id;
+    // Keep what they earned while browsing as a guest.
+    mergeGuestInto(player.id);
     save();
     return { player };
   },
@@ -78,6 +81,7 @@ export const authApi: HeapsparkApi['auth'] = {
     d.codes = d.codes.filter((c) => c.playerId !== me.id || c.redeemedAt);
     for (const c of d.codes) if (c.playerId === me.id) c.playerId = 'deleted';
     d.players = d.players.filter((p) => p.id !== me.id);
+    eraseProgress(me.id);
     d.sessionPlayerId = null;
     save();
   },
@@ -92,7 +96,7 @@ export const promosApi: HeapsparkApi['promos'] = {
     if (!promo) return { ok: false, error: 'unavailable' };
     // One code per player per promo: unlocking again just shows it.
     const existing = d.codes.find((c) => c.promoId === promoId && c.playerId === me.id);
-    if (existing) return { ok: true, item: toWallet(existing)!, already: true };
+    if (existing) return { ok: true, item: toWallet(existing)!, already: true, awards: [] };
     if (!isPromoLive(promo)) return { ok: false, error: Date.parse(promo.expiresAt) <= Date.now() ? 'expired' : 'unavailable' };
     if (remaining(promo) === 0) return { ok: false, error: 'sold-out' };
 
@@ -112,8 +116,9 @@ export const promosApi: HeapsparkApi['promos'] = {
     };
     d.codes.push(row);
     promo.quantityUnlocked++;
+    const awards = awardFor(me.id, 'unlock', promoId);
     save();
-    return { ok: true, item: toWallet(row)!, already: false };
+    return { ok: true, item: toWallet(row)!, already: false, awards };
   },
   async wallet() {
     const me = currentPlayer();
@@ -150,6 +155,8 @@ export const validationApi: HeapsparkApi['validation'] = {
     const at = new Date().toISOString();
     res.row.redeemedAt = at;
     db().redemptions.push({ id: uid(), promoCodeId: res.row.id, businessId, redeemedAt: at, method });
+    // The player's reward shows up next time they open the game.
+    if (res.row.playerId !== 'deleted') awardFor(res.row.playerId, 'redeem', res.row.id);
     save();
     return { ok: true, item: toWallet(res.row)!, playerName: res.playerName };
   },

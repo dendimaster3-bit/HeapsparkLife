@@ -13,6 +13,13 @@ import { AuthSheet } from './auth/AuthSheet';
 import { WalletSheet } from './wallet/WalletSheet';
 import { CodeModal } from './wallet/CodeModal';
 import { useSessionStore } from '@/store/useSessionStore';
+import { useProgressStore } from '@/store/useProgressStore';
+import { PassportSheet } from './passport/PassportSheet';
+import { ShareSheet } from './share/ShareSheet';
+import { Toasts } from './common/Toasts';
+import { flyToBusiness } from '@/lib/navigation';
+import { DISTRICTS_BY_ID } from '@/data/districts';
+import type { DistrictId } from '@/types/geo';
 import { useCameraStore } from '@/store/useCameraStore';
 
 // The 3D engine is its own chunk so the intro paints instantly.
@@ -26,6 +33,27 @@ export default function GamePage() {
   const debug = useUiStore((s) => s.debug);
   const [sceneReady, setSceneReady] = useState(false);
   const level = useCameraStore((s) => s.level);
+  const districtId = useCameraStore((s) => s.districtId);
+
+  // Start of play: daily-visit points, catch-up toasts, deep links
+  // (?b=<businessId> from share cards, ?d=<districtId>).
+  useEffect(() => {
+    if (!introDone) return;
+    void (async () => {
+      await useProgressStore.getState().catchUp();
+      await useProgressStore.getState().dailyVisit();
+    })();
+    const params = new URLSearchParams(location.search);
+    const b = params.get('b');
+    const d = params.get('d');
+    if (b) void flyToBusiness(b);
+    else if (d && d in DISTRICTS_BY_ID) useCameraStore.getState().goDistrict(d as DistrictId);
+  }, [introDone]);
+
+  // Entering a district stamps the passport (first time only).
+  useEffect(() => {
+    if (introDone && districtId) void useProgressStore.getState().visitDistrict(districtId);
+  }, [introDone, districtId]);
 
   const initSession = useSessionStore((s) => s.init);
   useEffect(() => {
@@ -48,7 +76,10 @@ export default function GamePage() {
           <SearchSheet />
           <WalletSheet />
           <CodeModal />
+          <PassportSheet />
+          <ShareSheet />
           <AuthSheet />
+          <Toasts />
         </>
       )}
       {debug && <DebugPanel />}

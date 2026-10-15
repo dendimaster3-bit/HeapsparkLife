@@ -69,6 +69,13 @@ Plots are generated along the streets of every town (`src/game/world/plots.ts`, 
 - **Validation** (`/validate`): staff type the code (case, spaces and dashes don't matter) or tap **Scan QR** to use the camera. The QR holds a link to `/validate?code=…`, so a normal phone camera opens the page with the code filled in. Staff see the offer, the player's display name and any rules to check (first visit, minimum spend), then **Confirm & mark as used**. Codes are **single-use** and only valid at the issuing business.
 - ⚠️ **Demo limitation:** the mock adapter stores everything in the browser's localStorage, so a code can only be validated in the same browser that unlocked it, and staff pick their business from a list. With Supabase, staff will sign in and the server will enforce ownership and single use.
 
+## Spark Points, passport and sharing
+
+- **Spark Points** (⚡ pill in the top bar): +10 daily visit (once per Mauritius day), +25 first time in each district, +15 per promo unlocked, +50 per code redeemed at a shop, plus badge bonuses. Rules and numbers live in `src/data/rewards.ts`. Every award has a unique key, so nothing is ever paid twice. **Points are not money and can't be cashed out** — stated in the passport, wallet, settings and `/terms`.
+- **District passport:** a stamp per district the first time you enter it, a progress bar, and badges: First stamp, Explorer (5 districts), **Tour de l'Île (9/9)**, First deal, Regular. Tap an empty stamp to fly there.
+- **Guests earn too.** Their progress is kept on the device and merged into the account when they sign in. Points for a code redeemed at a shop appear as a toast the next time the player opens the game.
+- **Share cards:** "I unlocked 15% off at X in Heapspark Life!" (from the code screen) and "I've explored 5/9 districts…" (from the passport). A 1080×1080 image is drawn on a canvas with the island outline, and shared via the phone's share sheet (with the image where supported), WhatsApp, Facebook, Save image or Copy link. The personal code is never shared. Links like `/?b=<businessId>` open the game and fly to that business; `/?d=<districtId>` opens a district.
+
 ## Controls
 
 - **Phone:** drag to move, pinch to zoom, two fingers to rotate/tilt.

@@ -16,6 +16,7 @@ import { isPromoLive } from '@/lib/promo';
 import type { HeapsparkApi } from '../types';
 import { db } from './db';
 import { authApi, promosApi, validationApi } from './players';
+import { progressApi } from './progress';
 
 const activePromos = (businessId: string) => db().promos.filter((p) => p.businessId === businessId && isPromoLive(p));
 
@@ -136,6 +137,7 @@ export const mockApi: HeapsparkApi = {
   auth: authApi,
   promos: promosApi,
   validation: validationApi,
+  progress: progressApi,
 
   events: {
     track(type, businessId) {
@@ -148,7 +150,7 @@ export const mockApi: HeapsparkApi = {
       }
     },
     async summary(businessId) {
-      const out: EventSummary = { view: 0, cardOpen: 0, call: 0, whatsapp: 0, website: 0, adClick: 0 };
+      const out: EventSummary = { view: 0, cardOpen: 0, call: 0, whatsapp: 0, website: 0, share: 0, adClick: 0 };
       for (const e of readEvents()) if (e.businessId === businessId) out[e.type]++;
       return out;
     },

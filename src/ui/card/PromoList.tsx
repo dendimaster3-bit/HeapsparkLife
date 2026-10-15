@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { api } from '@/api';
 import { intlLocale, useT, type TranslationKey } from '@/i18n';
 import { useSessionStore } from '@/store/useSessionStore';
+import { useProgressStore } from '@/store/useProgressStore';
 import { useUiStore } from '@/store/useUiStore';
 import { discountBadge, remaining } from '@/lib/promo';
 import type { Promo } from '@/types/promo';
@@ -33,6 +34,7 @@ export function PromoList({ promos, brand, onChanged }: { promos: Promo[]; brand
       }
       await refreshWallet();
       showCode(res.item);
+      void useProgressStore.getState().handleAwards(res.awards);
       if (!res.already) onChanged();
     });
 

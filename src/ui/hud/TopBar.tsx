@@ -11,6 +11,7 @@ import { HighlightChip } from './HighlightChip';
 import { useSearchStore } from '@/store/useSearchStore';
 import { useSessionStore } from '@/store/useSessionStore';
 import { codeState } from '@/lib/promo';
+import { useProgressStore } from '@/store/useProgressStore';
 
 const base = 'flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-semibold shadow-md backdrop-blur';
 const chip = `${base} bg-white/90 text-slate-800 dark:bg-slate-900/85 dark:text-slate-100`;
@@ -23,6 +24,9 @@ export function TopBar() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const openSearch = useSearchStore((s) => s.setOpen);
   const setWalletOpen = useSessionStore((s) => s.setWalletOpen);
+  const points = useProgressStore((s) => s.progress?.points ?? 0);
+  const stamps = useProgressStore((s) => s.progress?.stamps.length ?? 0);
+  const setPassportOpen = useProgressStore((s) => s.setPassportOpen);
   const activeCodes = useSessionStore((s) => s.wallet.filter((w) => codeState(w.code) === 'active').length);
 
   const district = districtId ? DISTRICTS_BY_ID[districtId] : null;
@@ -54,6 +58,15 @@ export function TopBar() {
       <div className="pointer-events-auto flex shrink-0 flex-wrap items-center justify-end gap-2">
         <button className={`${chip} w-11 justify-center px-0`} onClick={() => openSearch(true)} aria-label={t('search.open')}>
           <span aria-hidden className="text-lg">🔍</span>
+        </button>
+        <button
+          className={`${chip} bg-yellow-300/95 text-amber-950 dark:bg-yellow-400/90 dark:text-amber-950`}
+          onClick={() => setPassportOpen(true)}
+          aria-label={`${t('points.open')}: ${points} ${t('points.label')}, ${t('passport.count', { n: stamps, total: 9 })}`}
+        >
+          <span aria-hidden>⚡</span>
+          <span className="tabular-nums">{points}</span>
+          <span aria-hidden className="hidden text-xs opacity-75 sm:inline">· 🛂 {stamps}/9</span>
         </button>
         <button className={`${chip} relative w-11 justify-center px-0`} onClick={() => setWalletOpen(true)} aria-label={`${t('wallet.open')}${activeCodes ? ` (${activeCodes})` : ''}`}>
           <span aria-hidden className="text-lg">🎟️</span>
